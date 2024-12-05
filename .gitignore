@@ -5,3 +5,6 @@
 
 data/
 notes.R
+*.xlsx
+*.png
+*.html
