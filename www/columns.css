@@ -1,0 +1,3 @@
+/* needed for multi-columns in html */
+.cols {display: flex; }   
+

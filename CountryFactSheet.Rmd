@@ -1,0 +1,928 @@
+---
+params:
+  Country: ASEAN
+geometry: "left=1cm,right=1cm,top=1.5cm,bottom=2cm"
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{array}
+- \usepackage{multirow}
+- \usepackage{wrapfig}
+- \usepackage{float}
+- \usepackage{colortbl}
+- \usepackage{pdflscape}
+- \usepackage{tabu}
+- \usepackage{threeparttable}
+- \usepackage{threeparttablex}
+- \usepackage[normalem]{ulem}
+- \usepackage{makecell}
+- \usepackage{fancyhdr}
+# - \usepackage{unicode-math}
+# - \usepackage{fontspec}
+# - \setmainfont{"BCSans"}
+# - \setmainfont{BCSans}
+# - \setmainfont{Arial}
+output:
+  pdf_document: 
+    # keep_tex:  true
+    # latex_engine: xelatex
+    includes:
+      in_header: columns.tex
+  html_document: default
+pagetitle: Country Trade Profiles
+---
+<!--
+Copyright 2024 Province of British Columbia
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+-->
+
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+## need "html" so that formatting shows up (e.g., colorize function)
+options(knitr.table.format = function() {
+  if (knitr::is_latex_output()) "latex" else "html"
+})
+
+## need to escape '&' in "China & Hong Kong", else PDF crashes, (but not for html code)
+knitr::knit_hooks$set(inline = function(x) {
+  if(knitr::is_latex_output()) {
+    return(gsub(pattern = "&", 
+              replacement = "\\&", 
+              x = x, 
+              fixed = TRUE))
+  } else {
+    x
+  }
+})
+
+# this doesn't seem to work
+# ## trying to get fontspec & setmainfont to work
+# tempsty <- file.path(tempdir(), "unicode-math.sty")
+# file.copy("unicode-math.sty", tempsty, overwrite = TRUE)
+# tempxesty <- file.path(tempdir(), "unicode-math-xetex.sty")
+# file.copy("unicode-math-xetex.sty", tempxesty, overwrite = TRUE)
+# tempxesty1 <- file.path(tempdir(), "unicode-math-table.tex")
+# file.copy("unicode-math-table.tex", tempxesty1, overwrite = TRUE)
+# tempxesty2 <- file.path(tempdir(), "unicode-math-luatex.sty")
+# file.copy("unicode-math-luatex.sty", tempxesty, overwrite = TRUE)
+
+```
+
+```{r make_tables, include = FALSE}
+
+### * page 1 source note for countries, for Tables 4 & 5
+source_pg1 <- c("Data Source: International Trade Centre")
+## no longer the case (2024)
+# if(params$Country == "United States") {
+#   source_pg1 <- c("Data Source: US Census Bureau")
+# }
+
+
+### * Page 1 tables ----
+
+## Table 1: Top 5 BC Origin Exports to params$Country, 2019
+new_title <- paste0("Top 5 BC Origin Exports to ", params$Country, ", ", 
+                    years$year[years$tab == "yearSC"])
+
+t01d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t01) %>%
+  unnest(cols = c(t01)) %>%
+  rename({{new_title}} := Commodity) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`Cdn $Millions` = case_when(str_detect(`Cdn $Millions`, "[.]") ~ `Cdn $Millions`,
+                                     TRUE ~ paste0(`Cdn $Millions`, ".0")))
+t01 <- format.for.html(tab = t01d, alignVector = c("l", "c", "c"), boldRow = 6) %>%
+    column_spec(1, width = "18em")
+
+
+## Table 2: Top 5 Canadian Exports to params$Country, 2019
+new_title <- paste0("Top 5 Canadian Exports to ", params$Country, ", ", 
+                    years$year[years$tab == "yearSC"])
+
+t02d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t02) %>%
+  unnest(cols = c(t02)) %>%
+  rename({{new_title}} := Commodity) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`Cdn $Millions` = case_when(str_detect(`Cdn $Millions`, "[.]") ~ `Cdn $Millions`,
+                                     TRUE ~ paste0(`Cdn $Millions`, ".0")))
+
+t02 <- format.for.html(tab = t02d, alignVector = c("l", "c", "c"), boldRow = 6)
+
+
+## Table 3: Top 5 Canadian Imports from params$Country, 2019
+new_title <- paste0("Top 5 Canadian Imports from ", params$Country, ", ", 
+                    years$year[years$tab == "yearSC"])
+
+t03d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t03) %>%
+  unnest(cols = c(t03)) %>%
+  rename({{new_title}} := Commodity) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`Cdn $Millions` = case_when(str_detect(`Cdn $Millions`, "[.]") ~ `Cdn $Millions`,
+                                     TRUE ~ paste0(`Cdn $Millions`, ".0")))
+t03 <- format.for.html(tab = t03d, alignVector = c("l", "c", "c"), boldRow = 6)
+
+
+## Table 4: Top 5 Exports from params$Country to the Rest of the World, 2018
+new_title <- paste0("Top 5 Exports from ", params$Country, " to the Rest of the World, ",
+                    years$year[years$tab == "yearITC"])
+if(params$Country %in% grpdCountries) {  new_title <- paste0(new_title, "*")  }
+
+t04d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t04) %>%
+  unnest(cols = c(t04)) %>%
+  rename({{new_title}} := var) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`US $Millions` = case_when(str_detect(`US $Millions`, "[.]") ~ `US $Millions`,
+                                     TRUE ~ paste0(`US $Millions`, ".0")))
+t04 <- format.for.html(tab = t04d, alignVector = c("l", "c", "c"), boldRow = 6) %>%
+  #footnote(general = "Data Source: International Trade Centre", general_title = "")
+  footnote(general = source_pg1, general_title = "")
+
+
+## Table 5: Top 5 Imports into params$Country from the Rest of the World, 2018
+new_title <- paste0("Top 5 Imports into ", params$Country, " from the Rest of the World, ",
+                    years$year[years$tab == "yearITC"])
+if(params$Country %in% grpdCountries) {  new_title <- paste0(new_title, "*")  }
+
+t05d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t05) %>%
+  unnest(cols = c(t05)) %>%
+  rename({{new_title}} := var) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`US $Millions` = case_when(str_detect(`US $Millions`, "[.]") ~ `US $Millions`,
+                                     TRUE ~ paste0(`US $Millions`, ".0")))
+t05 <- format.for.html(tab = t05d, alignVector = c("l", "c", "c"), boldRow = 6) %>%
+  #footnote(general = "Data Source: International Trade Centre", general_title = "")
+  footnote(general = source_pg1, general_title = "")
+
+
+## Table 6: Provincial Distribution of Exports to params$Country, 2019
+new_title <- paste0("Provincial Distribution of Exports to ", params$Country, ", ", 
+                    years$year[years$tab == "yearSC"])
+
+t06d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t06) %>%
+  unnest(cols = c(t06)) %>%
+  ## add '.0' to numbers with no decimal showing
+  mutate(`Cdn $Millions` = case_when(str_detect(`Cdn $Millions`, "[.]") ~ `Cdn $Millions`,
+                                     TRUE ~ paste0(`Cdn $Millions`, ".0")))
+BCrow_cty <- which(str_detect(t06d$`Province of Origin`, "British Columbia"))
+t06d <- t06d %>%
+  rename({{new_title}} := `Province of Origin`)
+t06 <- format.for.html(tab = t06d, alignVector = c("l", "c", "c"), boldRow = 14) %>%
+  row_spec(BCrow_cty, bold = TRUE)
+
+
+### * additional note for Tables 4 & 5 for grouped countries ----
+if(params$Country %in% grpdCountries) {
+  if(str_detect(params$Country, "China"))    {  groups <- paste0("China and Hong Kong") }
+  if(str_detect(params$Country, "UK"))       {  groups <- paste0("European Union countries") }
+  if(str_detect(params$Country, "European")) {  groups <- paste0("European Union countries") }
+  if(params$Country == "ASEAN")              {  groups <- paste0("ASEAN countries") }
+  note_grp <- paste0("*", params$Country, " export and import data include trade between ", groups, ".")
+} else {
+  note_grp <- ""
+}
+
+
+### * Page 2 tables ----
+
+## Table 7: params$Country General Information
+t07_title <- paste0(params$Country, " General Information")
+
+t07d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t07) %>%
+  unnest(cols = c(t07))
+t07 <- t07d %>%
+  mutate(Var = case_when(## table prints on a single line (wrong) UNLESS escape = TRUE in kable() below
+                         Var == "GDP (US$ billions)*" ~ "GDP (US\\$ billions)*",
+                         Var == "Per Capita GDP (US$ 2017)*" ~ "Per Capita GDP (US\\$ 2017)*",
+                         TRUE ~ as.character(Var))) %>%
+  kbl(align = c("l", "r", "c"), escape = TRUE, col.names = c("", "", "")) %>%
+  kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped", "condensed")) %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "10em") %>%
+  #footnote(general = "*Purchasing Power Parity \n Source: CIA", general_title = "")
+  footnote(general = source_pg2[1:2], general_title = "")
+
+           
+## Table 8: BC's High Technology Trade with params$Country (Cdn$ Millions)
+t08_title <- paste0("BC's High Technology Trade with ", params$Country, " (Cdn\\$ Millions)")
+t08_title_xlsx <- paste0("BC's High Technology Trade with ", params$Country, " (Cdn$ Millions)")
+
+t08d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t08) %>%
+  unnest(cols = c(t08)) %>%
+  ## convert to dollars (in millions), add (if needed) comma separator
+  mutate(`Domestic Exports` = scales::dollar(`Domestic Exports`, scale = 0.000001, big.mark = ","),
+         `Re-Exports` = scales::dollar(`Re-Exports`, scale = 0.000001, big.mark = ","),
+         `Imports` = scales::dollar(`Imports`, scale = 0.000001, big.mark = ","),
+         `Trade Balance` = scales::dollar(`Trade Balance`, scale = 0.000001, big.mark = ","))
+t08 <- format.for.html.footnote(tab = t08d, alignVector = c("l", "c", "c", "c", "c"), 
+                                footNote = source_pg2[3])
+  # footnote(general = "Source: BC Stats", general_title = "")
+
+
+## Table 9: Canada's Investment Position with params$Country (Cdn$ Millions)
+t09_title <- paste0("Canada's Investment Position with ", params$Country, " (Cdn\\$ Millions)")
+t09_title_xlsx <- paste0("Canada's Investment Position with ", params$Country, " (Cdn$ Millions)")
+new_col1 <- paste0("Canadian Direct Investment in ", params$Country)
+new_col2 <- paste0("Direct Investment in Canada by ", params$Country)
+
+t09d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t09) %>%
+  unnest(cols = c(t09)) %>%
+  filter(Year >= max(as.numeric(Year))-9) %>%
+  ## convert to dollars, add (if needed) comma separator
+  mutate(`Canadian Direct Investment` = 
+           case_when(`Canadian Direct Investment` == "x" ~ "x",
+                     `Canadian Direct Investment` == ".." ~ "..",
+                     TRUE ~ scales::dollar(as.numeric(`Canadian Direct Investment`))),
+         `Direct Investment in Canada` = 
+           case_when(`Direct Investment in Canada` == "x" ~ "x",
+                     `Direct Investment in Canada` == ".." ~ "..",
+                     TRUE ~ scales::dollar(as.numeric(`Direct Investment in Canada`)))) %>%
+rename({{new_col1}} := `Canadian Direct Investment`,
+         {{new_col2}} := `Direct Investment in Canada`)
+t09 <- format.for.html.footnote(tab = t09d, alignVector = c("l", "c", "c"),
+                                footNote = source_pg2[4])
+                                #footNote = "Source: Statistics Canada")
+rm(new_col1, new_col2)
+
+
+## Table 10: Travellers from params$Country Entering Canada Through BC and Immigration to BC from params$Country
+t10_title <- paste0("Travellers from ", params$Country, " Entering Canada Through BC and Immigration to BC from " , params$Country)
+
+t10d <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t10) %>%
+  unnest(cols = c(t10)) %>%
+  filter(Year >= max(as.numeric(Year))-9) %>%
+  mutate(`Travellers (Persons)` = prettyNum(`Travellers (Persons)`, big.mark = ","),
+         `Immigrants (Persons)` = prettyNum(`Immigrants (Persons)`, big.mark = ","))
+t10 <- format.for.html.footnote(tab = t10d, alignVector = c("l", "c", "c"), 
+                                footNote = source_pg2[5:7])
+                                # footNote = "Sources: \n Travellers - Statistics Canada \n Immigrants - Immigration, Refugees and Citizenship Canada")
+
+
+```
+
+```{r make_charts, include = FALSE}
+
+## Chart 1: BC Origin Exports to params$Country
+##       blue bars = $Millions, t11 `BC Exports`
+##       line = share, t11 `BC Exports` / t11 `Canada Exports`
+chart1 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t11) %>%
+  c1(country = params$Country, nested = TRUE)
+ggsave("chart1.png", dev = "png", width = 5, height = 3.5, units = "in")
+c1_title <- paste0("BC Origin Exports to ", params$Country)
+
+
+## Chart 2: Canada's Balance of Trade in Goods with params$Country
+##       blue bars = Exports, t11 `Canada Exports`
+##       gray bars = Imports, t11 `Canada Imports`
+##       line = Balance of Trade, t11 `Trade Balance`
+chart2 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t11) %>%
+  c2(country = params$Country, nested = TRUE)
+ggsave("chart2.png", dev = "png", width = 5, height = 3.5, units = "in")
+c2_title <- paste0("Canada's Balance of Trade in Goods with ", params$Country)
+
+
+## Chart 3: Canada's Balance of Trade in Services with params$Country
+##       blue bars = Exports, t12 `Service Exports` (in $M)
+##       gray bars = Imports, t12 `Service Imports` (in $M)
+##       line = Balance of Trade, t12 `Service Trade Balance`
+## ** NOTE: c3 should NOT appear when data is unavailable (i.e., when Index$X8 == "XX") **
+
+chart3 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t12)
+## if t12 is NULL, get blank "chart" to "display"
+if(is.null(chart3$t12[[1]])) { 
+  ##https://stackoverflow.com/questions/55537068/how-to-create-and-save-a-1x1-pixel-transparent-png-using-r
+  png::writePNG(array(0, dim = c(1,1,4)), "chart3.png")
+  c3_title <- c(" ")
+  show_c3 <- FALSE
+} else { 
+  chart3 <- chart3 %>% c3(country = params$Country, nested = TRUE)
+  ggsave("chart3.png", dev = "png", width = 5, height = 3.5, units = "in")
+  c3_title <- paste0("Canada's Balance of Trade in Services with ", params$Country)
+  show_c3 <- TRUE
+}
+
+
+## Chart 4: Year-over-Year % Growth in GDP of params$Country
+##       line = % change, t13 value
+chart4 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t13) %>%
+  c4(country = params$Country, nested = TRUE, source_text = "Source: International Monetary Fund")
+ggsave("chart4.png", dev = "png", width = 5, height = 3.5, units = "in")
+c4_title <- paste0("Year-Over-Year \\% Growth in GDP of ", params$Country)
+c4_title_xlsx <- paste0("Year-Over-Year % Growth in GDP of ", params$Country)
+
+
+## Chart 5: Immigrants to BC from params$Country
+##       line = Persons, t10 `Immigrants (Persons)`
+chart5 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t10) %>%
+  c5(country = params$Country, nested = TRUE)
+ggsave("chart5.png", dev = "png", width = 5, height = 3.5, units = "in")
+c5_title <- paste0("Immigrants to BC from ", params$Country)
+
+
+## Chart 6: Travellers from params$Country Entering Through BC
+##       line = Thousands, t10 `Travellers (Persons)`
+chart6 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(Country, t10) %>%
+  c6(country = params$Country, nested = TRUE)
+ggsave("chart6.png", dev = "png", width = 5, height = 3.5, units = "in")
+c6_title <- paste0("Travellers from ", params$Country, " Entering Canada Through BC")
+
+
+```
+
+```{r make_text, include = FALSE}
+
+## How important is params$Country to BC and Canada?
+text1_title <- paste0("How important is ", params$Country, " to BC and Canada?")
+
+t15 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t15) %>%
+  unnest(cols = c(t15))
+
+if (!(params$Country %in% c("ASEAN", "EU + UK", "China & Hong Kong", "European Union"))) {
+  text1 <- paste0(params$Country,
+                 " ranked #",
+                 t15$Rank[t15$Var == "BC Exports"], 
+                 " as a destination for BC origin exports in ",
+                 years$year[years$tab == "yearSC"],
+                 " with ",
+                 t15$Perc[t15$Var == "BC Exports"],
+                 " of BC's commodity exports shipped there. It was ranked #",
+                 t15$Rank[t15$Var == "Canada Exports"],
+                 " as a destination for Canadian exports with ",
+                 t15$Perc[t15$Var == "Canada Exports"],
+                 " of Canadian goods exports shipped there and #",
+                 t15$Rank[t15$Var == "Canada Imports"],
+                 " as a source of imports into Canada with ",
+                 t15$Perc[t15$Var == "Canada Imports"],
+                 " of Canadian imports originating from ",
+                 params$Country,
+                 ".")
+}
+
+if (params$Country %in% c("ASEAN", "EU + UK", "China & Hong Kong", "European Union")) {
+  text1 <- paste0(params$Country,
+                 " was the destination for ",
+                 t15$Perc[t15$Var == "BC Exports"],
+                 " of BC's commodity exports shipped in ",
+                 years$year[years$tab == "yearSC"],
+                 ". Nationally, ",
+		 t15$Perc[t15$Var == "Canada Exports"],
+		 " of Canadian goods exports were shipped to ",
+            	 params$Country,
+		 ", while ",
+		 t15$Perc[t15$Var == "Canada Imports"],
+		 " of Canadian imports originated from ",
+		 params$Country,
+                 ".")
+}
+		 
+
+
+## How important is Canada to params$Country?
+text2_title <- paste0("How important is Canada to ", params$Country, "?")
+
+t16 <- nested_data_countries %>%
+  filter(Country == params$Country) %>%
+  select(t16) %>%
+  unnest(cols = c(t16)) %>%
+  mutate(Share = janitor::round_half_up(Share, digits = 1))
+
+text2 <- paste0("Canada was the source of approximately ",
+                # janitor::round_half_up(t16$Share[t16$Var == "Imports into Canada"], digits = 1),
+                t16$Share[t16$Var == "Imports into Canada"],
+                "% of imports into ",
+                params$Country,
+                " in ",
+                years$year[years$tab == "yearITC"],
+                ". Approximately ",
+                # janitor::round_half_up(t16$Share[t16$Var == "Exports from Canada"], digits = 1),
+                t16$Share[t16$Var == "Exports from Canada"],
+                "% of exports from ",
+                params$Country,
+                " were destined for Canada in that year.")
+
+```
+
+```{r, include = knitr::is_latex_output()}
+## The LaTeX environment `tiny` is only generated for LaTeX output.
+# knitr::asis_output('\n\n\\begin{tiny}')
+## It actually shows \begin{tiny} in PDF. It runs fine without this code...
+```
+
+<!-- page 1 -->
+```{=latex}
+\pagestyle{fancy}
+\setlength\headheight{29pt}
+\fancyhead[L]{\fontsize{20}{22} \selectfont {\textbf{Fact Sheet}}}
+\fancyhead[R]{\fontsize{20}{22} \selectfont {\textbf{`r colorize(toupper(params$Country), color = '#2A64AB')`}}}
+\fancyfoot[L]{BC Stats}
+\fancyfoot[C]{www.bcstats.gov.bc.ca}
+\fancyfoot[R]{Data last updated: `r last_update`}
+\renewcommand{\headrule}{\vbox to 0pt{\hbox to\headwidth{\dotfill}\vss}}
+
+\begin{cols}
+\begin{col}{0.52\textwidth}
+\vspace{-20pt}
+```
+<!-- :::::: {.cols data-latex=""} -->
+<!-- ::: {.col data-latex="{0.52\textwidth}"} -->
+```{r, results = 'asis', include = knitr::is_latex_output()}
+## PDF-only code
+format.for.pdf(tab = t01d, alignVector = c("l", "c", "c"), boldRow = 6) #%>%
+  # footnote(general = "", general_title = "")  ## add blank line after table
+format.for.pdf(tab = t02d, alignVector = c("l", "c", "c"), boldRow = 6)
+format.for.pdf(tab = t03d, alignVector = c("l", "c", "c"), boldRow = 6)
+format.for.pdf(tab = t04d, alignVector = c("l", "c", "c"), boldRow = 6) %>%
+  footnote(general = c(source_pg1), general_title = "")
+format.for.pdf(tab = t05d, alignVector = c("l", "c", "c"), boldRow = 6)
+format.for.pdf(tab = t06d, alignVector = c("l", "c", "c"), boldRow = 14) %>%
+  row_spec(BCrow_cty, bold = TRUE)
+```
+
+```{=html}
+<table>
+  <tr>
+    <td width = "52%">
+      <h1><strong>Fact Sheet</strong></h1></br>
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+t01
+t02
+t03
+t04
+t05
+```
+
+```{=latex}
+\end{col}
+\begin{col}{0.02\textwidth}
+~
+\end{col}
+\begin{col}{0.46\textwidth}
+\vspace{-20pt}
+```
+<!-- ::: -->
+<!-- ::: {.col data-latex="{0.02\textwidth}"} -->
+<!-- \  -->
+<!-- ::: -->
+<!-- ::: {.col data-latex="{0.46\textwidth}"} -->
+```{=html}
+</td>
+<td width = "2%">&nbsp;&nbsp;</td>
+<td width = "46%", valign = "top"><span style = 'color: #2A64AB";'>
+  <h1><strong><center>`r colorize(toupper(params$Country), color = '#2A64AB')`</center></strong></h1></br>
+```
+
+`r bold.center.color.text(c1_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+## original width = 5, height = 3.5;  90% is 4.5 X 3.15;  80% is 4 X 2.8
+chart1
+```
+
+```{=latex}
+\vspace{-10pt}
+```
+
+`r bold.center.color.text(c2_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+chart2
+```
+
+```{=latex}
+\vspace{-10pt}
+```
+
+`r bold.center.color.text(c3_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+if(show_c3 == TRUE) { chart3 }
+```
+
+```{=html}
+<br><br><br><br><br>
+```
+
+```{=latex}
+\fontsize{7.5}{9.5}\selectfont
+\vspace{-5pt}
+```
+
+`r note_grp`
+
+```{=html}
+    </td>
+  </tr>
+  <tr>
+    <td width = "52%">
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+## for html, put t06 in own row with text1 and text2
+t06
+```
+
+```{=html}
+    </td>
+    <td width = "2%">&nbsp;&nbsp;</td>
+    <td width = "46%", valign = "top">
+```
+
+```{=latex}
+\fontsize{7.5}{9.5}\selectfont
+\vspace{-5pt}
+```
+
+**`r colorize(text1_title, color = "#2A64AB")`**   
+`r text1`
+
+**`r colorize(text2_title, color = "#2A64AB")`**   
+`r text2`
+
+```{=html}
+<br><br><br><br><br><br><br><br><br><br>
+```
+
+Unless otherwise indicated, data source is Statistics Canada.  
+
+<!-- ::: -->
+<!-- :::::: -->
+```{=latex}
+\end{col}
+\end{cols}
+```
+
+```{=html}
+    </td>
+  </tr>
+</table>
+```
+
+
+<!-- page 2 -->
+```{=html}
+<table>
+  <tr>
+    <td width = "52%">
+```
+
+```{=latex}
+\begin{cols}
+\begin{col}{0.52\textwidth}
+\vspace{-25pt}
+```
+<!-- :::::: {.cols data-latex=""} -->
+<!-- ::: {.col data-latex="{0.52\textwidth}"} -->
+
+**`r colorize(t07_title, color = "#2A64AB")`**
+```{=latex}
+\vspace{-10pt}
+```
+
+```{r, results = 'asis', include = knitr::is_latex_output()}
+## PDF-only code
+t07d %>%
+  kbl(align = c("l", "r", "c"), escape = TRUE, col.names = NULL, booktabs = TRUE) %>%
+  ## col.names = NULL removes header row
+  column_spec(1, bold = TRUE) %>%
+  kable_styling(full_width = FALSE, position = "left", font_size = 6.4, latex_options = "striped") %>%
+  footnote(general = c(source_pg2[1:2], ""), general_title = "")
+  #footnote(general = c("*Purchasing Power Parity", "Source: CIA", ""), general_title = "")
+## include blank footnote at end to add space between this table and next table in PDF
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+t07
+```
+
+**`r colorize(t08_title, color = "#2A64AB")`**
+```{=latex}
+\vspace{-10pt}
+```
+
+```{r, results = 'asis', include = knitr::is_latex_output()}
+## PDF-only code
+format.for.pdf.footnote(tab = t08d, alignVector = c("l", "c", "c", "c", "c"),
+                        footNote = c(source_pg2[3], ""))
+                        #footNote = c("Source: BC Stats", ""))
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+t08
+```
+
+**`r colorize(t09_title, color = "#2A64AB")`**
+```{=latex}
+\vspace{-10pt}
+```
+
+```{r, results = 'asis', include = knitr::is_latex_output()}
+## PDF-only code
+format.for.pdf.footnote(tab = t09d, alignVector = c("l", "c", "c"), 
+                        #footNote = c("Source: Statistics Canada", "")) 
+                        footNote = c(source_pg2[4], "")) %>%
+  column_spec(2:3, width = "15em")
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+t09
+```
+
+**`r colorize(t10_title, color = "#2A64AB")`**
+```{=latex}
+\vspace{-10pt}
+```
+
+```{r, results = 'asis', include = knitr::is_latex_output()}
+## PDF-only code
+format.for.pdf.footnote(tab = t10d, alignVector = c("l", "c", "c"),
+                        # footNote = c("Sources:",    "Travellers - Statistics Canada", 
+                        #              "Immigrants - Immigration, Refugees and Citizenship Canada"))
+                        footNote = source_pg2[5:7]) %>%
+  column_spec(2:3, width = "15em")
+```
+
+```{r, results = 'asis', include = knitr::is_html_output()}
+## html-only code
+t10
+```
+<!-- ::: -->
+<!-- ::: {.col data-latex="{0.02\textwidth}"} -->
+<!-- \  -->
+<!-- ::: -->
+<!-- ::: {.col data-latex="{0.46\textwidth}"} -->
+```{=latex}
+\end{col}
+\begin{col}{0.02\textwidth}
+~
+\end{col}
+\begin{col}{0.46\textwidth}
+\vspace{-15pt}
+```
+
+```{=html}
+</td>
+<td width = "2%">&nbsp;&nbsp;</td>
+<td width = "46%", valign = "top">
+```
+
+`r bold.center.color.text(c4_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+chart4
+```
+
+`r bold.center.color.text(c5_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+chart5
+```
+
+`r bold.center.color.text(c6_title, color = "#2A64AB")`
+```{r, results = 'asis', fig.width = 5, fig.height = 3.5}
+chart6
+```
+<!-- ::: -->
+
+<!-- :::::: -->
+```{=latex}
+\end{col}
+\end{cols}
+```
+
+```{=html}
+    </td>
+  </tr>
+</table>
+```
+
+```{r, include = knitr::is_latex_output()}
+# knitr::asis_output('\\end{tiny}\n\n')
+```
+
+```{r make_xlsx, include = FALSE, eval = knitr::is_html_output()}
+
+### * set rows for Page2 (dynamic)
+## Page2 rows (based on previous tables' number of rows, in case table rows change)
+row_t07 <- 1 + 1 + 1                        ## number of rows in above + col row + blank row between
+row_t08 <- row_t07 + dim(t07d)[1] + 1 + 2 + 1    ## number of rows in above + col row + 2 source rows + blank row between
+row_t09 <- row_t08 + dim(t08d)[1] + 1 + 1 + 1 + 1 ## rows above + title + col row + 1 source + blank row between
+row_t10 <- row_t09 + dim(t09d)[1] + 1 + 1 + 1 + 1          ## as above
+rows_title_p2 <- c(row_t07, row_t08, row_t09, row_t10)     ## text title above each table
+rows_headers_p2 <- rows_title_p2[-1] + 1                   ## header rows for tables 8-10
+rows_source_p2 <- c(row_t08 - 3, row_t08 - 2, row_t09 - 2, row_t10 - 2, (row_t10 + dim(t10d)[1]) + 2:4)  ## "Source" rows
+rows_blank_p2 <- rows_source_p2[c(2, 3, 4, 7)] + 1         ## blank rows
+rows_page2 <- max(rows_blank_p2)                           ## number of rows in page2
+
+
+### * create empty workbook and add sheets
+wb <- createWorkbook()
+addWorksheet(wb, sheet = "Page1")
+addWorksheet(wb, sheet = "Page2")
+
+
+### * Page 1
+
+## add styled title
+writeData(wb, sheet = "Page1", x = "Fact Sheet", startRow = 1, withFilter = FALSE)
+addStyle(wb, sheet = "Page1", style = sTitle, rows = 1, cols = 1, stack = TRUE)
+writeData(wb, sheet = "Page1", x = toupper(params$Country), startRow = 1, startCol = 5)
+addStyle(wb, sheet = "Page1", style = sCountry, rows = 1, cols = 5, stack = TRUE)
+addStyle(wb, sheet = "Page1", style = sBorder, rows = 1, cols = 1:5, stack = TRUE)
+
+## add styled tables
+add.table.styled(wb = wb, sheet = "Page1", table = t01d, row = row_t01, style = sBlue)
+add.table.styled(wb = wb, sheet = "Page1", table = t02d, row = row_t02, style = sBlue)
+add.table.styled(wb = wb, sheet = "Page1", table = t03d, row = row_t03, style = sBlue)
+add.table.styled(wb = wb, sheet = "Page1", table = t04d, row = row_t04, style = sBlue)
+add.table.styled(wb = wb, sheet = "Page1", table = t05d, row = row_t05, style = sBlue)
+add.table.styled(wb = wb, sheet = "Page1", table = t06d, row = row_t06, style = sBlue)
+addStyle(wb, sheet = "Page1", style = sBold, rows = row_t06+BCrow_cty, cols = 1:3, stack = TRUE)
+## bold total rows
+for(i in seq_along(rows_total_p1)) {
+  addStyle(wb, sheet = "Page1", style = sBold, rows = rows_total_p1[i], cols = 1:3, stack = TRUE)
+}
+
+## add source rows
+for (i in seq_along(rows_source_p1)) {
+  writeData(wb, sheet = "Page1", x = source_pg1, startRow = rows_source_p1[i])
+  addStyle(wb, sheet = "Page1", style = sSource, rows = rows_source_p1[i], cols = 1, stack = TRUE)
+}
+
+## add charts with titles
+add.chart.titled(wb = wb, sheet = "Page1", c_title = c1_title, chart = "chart1.png", row = row_t01, col = 5)
+add.chart.titled(wb = wb, sheet = "Page1", c_title = c2_title, chart = "chart2.png", row = 14, col = 5)
+if(show_c3 == TRUE) {
+  add.chart.titled(wb = wb, sheet = "Page1", c_title = c3_title, chart = "chart3.png", row = 27, col = 5)
+}
+
+## additional note for Tables 4 & 5 for grouped countries
+if(params$Country %in% grpdCountries) {
+  writeData(wb, sheet = "Page1", x = note_grp, startRow = 42, startCol = 5)
+  addStyle(wb, sheet = "Page1", style = sText, rows = 42, cols = 5, stack = TRUE)
+}
+
+## add text1 & text2 ("How important is ...?"), and data source text
+writeData(wb, sheet = "Page1", x = text1_title, startRow = 44, startCol = 5)
+addStyle(wb, sheet = "Page1", style = sBlue, rows = 44, cols = 5, stack = TRUE)
+writeData(wb, sheet = "Page1", x = text1, startRow = 45, startCol = 5)
+mergeCells(wb, sheet = "Page1", cols = 5, rows = 45:50)
+addStyle(wb, sheet = "Page1", style = sText, rows = 45, cols = 5, stack = TRUE)
+
+writeData(wb, sheet = "Page1", x = text2_title, startRow = 52, startCol = 5)
+addStyle(wb, sheet = "Page1", style = sBlue, rows = 52, cols = 5, stack = TRUE)
+writeData(wb, sheet = "Page1", x = text2, startRow = 53, startCol = 5)
+mergeCells(wb, sheet = "Page1", cols = 5, rows = 53:56)
+addStyle(wb, sheet = "Page1", style = sText, rows = 53, cols = 5, stack = TRUE)
+
+writeData(wb, sheet = "Page1", x = "Unless otherwise indicated, data source is Statistics Canada.", startRow = 58, startCol = 5)
+addStyle(wb, sheet = "Page1", style = sSource, rows = 58, cols = 5, stack = TRUE)
+
+writeData(wb, sheet = "Page1", x = paste0("Data last updated: ", last_update), startRow = 59, startCol = 5)
+addStyle(wb, sheet = "Page1", style = sSource, rows = 59, cols = 5, stack = TRUE)
+addStyle(wb, sheet = "Page1", style = sBorder, rows = 59, cols = 1:5, stack = TRUE)
+
+
+## overall page styles
+addStyle(wb, sheet = "Page1", style = sText, rows = row_t01:rows_page1, cols = 1, stack = TRUE)
+addStyle(wb, sheet = "Page1", style = sStat, rows = row_t01:rows_page1, cols = 2:3, stack = TRUE, gridExpand = TRUE)
+
+## stretch cols and rows, freeze top row
+setColWidths(wb, sheet = "Page1", cols = 1:5, widths = c(42, 10, 7, 4, 66))
+setRowHeights(wb, sheet = "Page1", rows = c(2:rows_page1), heights = 29)  ## set heights
+setRowHeights(wb, sheet = "Page1", rows = rows_total_p1, heights = 11)    ## "Total" rows
+setRowHeights(wb, sheet = "Page1", rows = c((1+row_t06):(rows_page1-1)), heights = 12)   ## Province rows (t06d)
+setRowHeights(wb, sheet = "Page1", rows = rows_source_p1, heights = 11)   ## source rows
+setRowHeights(wb, sheet = "Page1", rows = rows_blank_p1, heights = 11)    ## blank rows
+freezePane(wb, sheet = "Page1", firstActiveRow = 2, firstActiveCol = 1)
+# ungroupColumns(wb, sheet = "Page1", cols = 1:5)
+
+
+### * Page 2 ----
+
+## overall page styles
+addStyle(wb, sheet = "Page2", style = sCenter, rows = row_t07:rows_page2, cols = 1, stack = TRUE)
+addStyle(wb, sheet = "Page2", style = sStat2, rows = (row_t08 +1):rows_page2, cols = 2:5, stack = TRUE, gridExpand = TRUE)
+
+## add styled title
+writeData(wb, sheet = "Page2", x = "Fact Sheet", startRow = 1, withFilter = FALSE)
+addStyle(wb, sheet = "Page2", style = sTitle, rows = 1, cols = 1, stack = TRUE)
+writeData(wb, sheet = "Page2", x = toupper(params$Country), startRow = 1, startCol = 7)
+addStyle(wb, sheet = "Page2", style = sCountry, rows = 1, cols = 7, stack = TRUE)
+writeData(wb, sheet = "Page2", x = "Continued", startRow = 2)
+addStyle(wb, sheet = "Page2", style = sContinued, rows = 2, cols = 1:7, stack = TRUE)
+
+## fix up tables
+t07d <- t07d %>%
+  mutate(X1 = "", X2 = "") %>%
+  select(Var, X1, X2, value, Year)
+
+t09d <- t09d %>% mutate(` ` = "", `  ` = "")
+t09d <- t09d[, c(1,2,4,3,5)]
+
+t10d <- t10d %>% mutate(` ` = "", `  ` = "") %>%
+  select(Year, `Travellers (Persons)`, ` `, `Immigrants (Persons)`, `  `)
+
+## add styled and titled tables
+writeData(wb, sheet = "Page2", x = t07_title, startRow = row_t07)
+addStyle(wb, sheet = "Page2", style = sBlue, rows = row_t07, cols = 1, stack = TRUE)
+writeData(wb, sheet = "Page2", x = t07d, startRow = row_t07+1, colNames = FALSE)
+for (i in 4:8) {
+  mergeCells(wb, sheet = "Page2", cols = 1:3, rows = i)
+}
+addStyle(wb, sheet = "Page2", style = sBold, rows = 4:8, cols = 1, stack = TRUE, gridExpand = TRUE)
+addStyle(wb, sheet = "Page2", style = sStat, rows = 4:8, cols = 4, stack = TRUE, gridExpand = TRUE)
+
+add.table.styled.titled(wb = wb, sheet = "Page2", title = t08_title_xlsx, table = t08d, row = row_t08)
+
+add.table.styled.titled(wb = wb, sheet = "Page2", title = t09_title_xlsx, table = t09d, row = row_t09)
+for (i in (row_t09+1):(row_t09 + 1 + dim(t09d)[1])) {
+  mergeCells(wb, sheet = "Page2", cols = 2:3, rows = i)
+  mergeCells(wb, sheet = "Page2", cols = 4:5, rows = i)
+}
+
+add.table.styled.titled(wb = wb, sheet = "Page2", title = t10_title, table = t10d, row = row_t10)
+mergeCells(wb, sheet = "Page2", cols = 1:5, rows = row_t10)
+addStyle(wb, sheet = "Page2", style = sText, rows = row_t10, cols = 1:5, stack = TRUE)
+for (i in (row_t10+1):(row_t10 + 1 + dim(t10d)[1])) {
+  mergeCells(wb, sheet = "Page2", cols = 2:3, rows = i)
+  mergeCells(wb, sheet = "Page2", cols = 4:5, rows = i)
+}
+
+for (i in seq_along(source_pg2)) {
+  writeData(wb, sheet = "Page2", x = source_pg2[i], startRow = rows_source_p2[i])
+  addStyle(wb, sheet = "Page2", style = sSource, cols = 1, rows = rows_source_p2[i])
+}
+
+## add charts with titles
+add.chart.titled(wb = wb, sheet = "Page2", c_title = c4_title_xlsx, chart = "chart4.png", row = row_t07, col = 7)
+add.chart.titled(wb = wb, sheet = "Page2", c_title = c5_title, chart = "chart5.png", row = 22, col = 7)
+add.chart.titled(wb = wb, sheet = "Page2", c_title = c6_title, chart = "chart6.png", row = 41, col = 7)
+
+## add Page2's bottom border
+addStyle(wb, sheet = "Page2", style = sBorder, rows = 61, cols = 1:7, stack = TRUE)
+
+## stretch cols and rows, freeze top rows
+setColWidths(wb, sheet = "Page2", cols = 1:7, widths = c(6, 12, 12, 12, 12, 4, 66))
+setRowHeights(wb, sheet = "Page2", rows = c(3:rows_page2), heights = 14) ## set heights
+setRowHeights(wb, sheet = "Page2", rows = rows_title_p2, heights = 29)   ## title rows
+setRowHeights(wb, sheet = "Page2", rows = rows_headers_p2, heights = 29) ## table header rows
+setRowHeights(wb, sheet = "Page2", rows = rows_source_p2, heights = 11)  ## source rows
+setRowHeights(wb, sheet = "Page2", rows = rows_blank_p2, heights = 11)   ## blank rows
+freezePane(wb, sheet = "Page2", firstActiveRow = 3, firstActiveCol = 1)
+# ungroupColumns(wb, sheet = "Page2", cols = 1:7)
+
+
+### * save workbook ----
+saveWorkbook(wb, paste0("Fact", params$Country, ".xlsx"), overwrite = TRUE)
+## Copy the report file to a temporary directory before processing it, in case we don't have write permissions to the current working dir (which can happen when deployed).
+tempWB <- file.path(tempdir(), paste0("Fact", params$Country, ".xlsx"))
+file.copy(from = paste0("Fact", params$Country, ".xlsx"), to = tempWB, overwrite = TRUE)
+rm(wb, i)
+
+```
