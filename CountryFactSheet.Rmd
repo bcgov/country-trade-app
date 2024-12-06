@@ -215,10 +215,8 @@ t07d <- nested_data_countries %>%
   select(t07) %>%
   unnest(cols = c(t07))
 t07 <- t07d %>%
-  mutate(Var = case_when(## table prints on a single line (wrong) UNLESS escape = TRUE in kable() below
-                         Var == "GDP (US$ billions)*" ~ "GDP (US\\$ billions)*",
-                         Var == "Per Capita GDP (US$ 2017)*" ~ "Per Capita GDP (US\\$ 2017)*",
-                         TRUE ~ as.character(Var))) %>%
+  mutate(Var = str_replace_all(Var, "\\$", "\\\\$")) %>%
+  ## table prints on a single line (wrong) UNLESS escape = TRUE in kable() below
   kbl(align = c("l", "r", "c"), escape = TRUE, col.names = c("", "", "")) %>%
   kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped", "condensed")) %>%
   column_spec(1, bold = TRUE) %>%

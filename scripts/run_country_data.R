@@ -291,7 +291,9 @@ gen.table <- function(data, country) {
   apgr <- temp %>% select(`Pop.Growth.%`) %>% pull() %>% paste0(., "%")
   gdp <- temp %>% select(`GDP.($US.billions).(Purchasing.Power.Parity)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
   gdp2 <- temp %>% select(`Per.Capita.GDP.($US.2017)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
-  gdp3 <- temp %>% select(`Real.GDP.Growth.%`) %>% pull() %>% paste0(., "%")
+  gdp3 <- temp %>% select(`Per.Capita.GDP.($US.Current)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
+  gdp4 <- temp %>% select(`Real.GDP.Growth.%`) %>% pull() %>% paste0(., "%")
+
 
   ## pull last year data was available
   yrs <- data %>%
@@ -302,16 +304,29 @@ gen.table <- function(data, country) {
     mutate(year = paste0("(", Year, ")"))
 
   ## put all into table
-  tibble::tibble(value = c(pop, apgr, gdp, gdp2, gdp3), yrs) %>%
+  t <- tibble::tibble(value = c(pop, apgr, gdp, gdp2, gdp3, gdp4), yrs) %>%
     select(Var, value, Year) %>%
     mutate(Var = case_when(Var == "Pop.Growth.%" ~ "Annual Population Growth Rate",
                            Var == "GDP.($US.billions).(Purchasing.Power.Parity)" ~ "GDP (US$ billions)*",
                            Var == "Per.Capita.GDP.($US.2017)" ~ "Per Capita GDP (US$ 2017)*",
+                           Var == "Per.Capita.GDP.($US.Current)" ~ "Per Capita GDP (US$ Current)*",
                            Var == "Real.GDP.Growth.%" ~ "GDP Real Growth",
                            TRUE ~ as.character(Var))) %>%
     ## add in country name as first column
     mutate(Country = {{country}}) %>%
     select(Country, everything())
+
+  if(country %in% c("ASEAN", "China & Hong Kong", "EU + UK")){
+
+    t <- t %>% filter(Var != "Per Capita GDP (US$ 2017)*")
+
+  }else {
+
+    t <- t %>% filter(Var != "Per Capita GDP (US$ Current)*")
+
+  }
+
+  t
 
 }
 
@@ -669,7 +684,7 @@ imp.table <- function(World, t14, nested = TRUE, year, country) {
 inputs <- openxlsx::loadWorkbook("../CountryFacts.xlsm")  ## "../" finds file one folder up
 
 Index <- openxlsx::readWorkbook(inputs, sheet = "Index")  ## first column is list of all countries
-dataGeneral <- openxlsx::readWorkbook(inputs, sheet = "General", cols = 1:7)
+dataGeneral <- openxlsx::readWorkbook(inputs, sheet = "General", cols = 1:8)
 dataTime <- openxlsx::readWorkbook(inputs, sheet = "Time")                ## Time data - used in t11 & t14
 dataCdaX <- openxlsx::readWorkbook(inputs, sheet = "CdaX", startRow = 2) %>%
   rename(Commodity = `Commodity.(note:.don't.overwrite.these.labels)`)    ## Canadian Origin Exports ($Cdn)
