@@ -26,19 +26,19 @@
 ## set value ----
 
 ## set "Last updated" date, for ui.R
-last_update <- "November 28, 2024" ## "February 17, 2021"
+last_update <- "December 16, 2025" ## "February 17, 2021"
 # last_update <- format(Sys.time(), "%B %d %Y")  ## gives Month Date Year (e.g., November 12 2020)
 
 
 ## load packages ----
-library(shiny)
-library(lubridate)
-library(DT)
-library(htmlwidgets)
-library(shinythemes)
-library(shinydashboard)
-library(plotly)
-library(shinyjs)
+library(shiny) 
+library(lubridate) 
+library(DT) 
+library(htmlwidgets) 
+library(shinythemes) 
+library(shinydashboard) 
+library(plotly) 
+library(shinyjs) 
 library(shinycssloaders)
 library(markdown)
 library(tidyr)
@@ -99,7 +99,7 @@ BCrow <- which(str_detect(table4$`Province of Origin`, "British Columbia"))
 
 ## kable_styling() requires bootstrap_options if format=html (instead of latex_options, only for pdf)
 format.for.html <- function(tab, alignVector, boldRow) {
-  tab %>%
+  tab %>% 
     kbl(align = {{alignVector}}) %>%
     kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped", "condensed"))%>%
     column_spec(2:3, width = "5em") %>%     ## an "em" ~ the size of the M character
@@ -108,7 +108,7 @@ format.for.html <- function(tab, alignVector, boldRow) {
 }
 
 format.for.html.footnote <- function(tab, alignVector, footNote) {
-  tab %>%
+  tab %>% 
     kbl(align = {{alignVector}}) %>%
     kable_styling(full_width = FALSE, position = "left", bootstrap_options = c("striped", "condensed"))%>%
     footnote(general = {{footNote}}, general_title = "")
@@ -116,7 +116,7 @@ format.for.html.footnote <- function(tab, alignVector, footNote) {
 
 ## kable_styling() requires latex_options if format=latex (instead of bootstrap_options, only for html)
 format.for.pdf <- function(tab, alignVector, boldRow) {
-  tab %>%
+  tab %>% 
     kbl(align = {{alignVector}}, booktabs = TRUE, linesep = "") %>%
     kable_styling(full_width = FALSE, position = "left", font_size = 6.4, latex_options = "striped") %>%
     column_spec(1, width = "25em") %>%
@@ -128,7 +128,7 @@ format.for.pdf <- function(tab, alignVector, boldRow) {
 }
 
 format.for.pdf.footnote <- function(tab, alignVector, footNote) {
-  tab %>%
+  tab %>% 
     kbl(align = {{alignVector}}, booktabs = TRUE, linesep = "") %>%
     kable_styling(full_width = FALSE, position = "left", font_size = 6.4, latex_options = "striped") %>%
     footnote(general = {{footNote}}, general_title = "")
@@ -141,13 +141,13 @@ format.for.pdf.footnote <- function(tab, alignVector, footNote) {
 ##       blue bars = $Millions, t11 `BC Exports`
 ##       line = share, t11 `BC Exports` / t11 `Canada Exports`
 c1 <- function(tab, country, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t11))
   }
-
-  tab <- tab %>%
+  
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
@@ -251,12 +251,12 @@ c1 <- function(tab, country, nested = TRUE) {
 ##       gray bars = Imports, t11 `Canada Imports`
 ##       line = Balance of Trade, t11 `Trade Balance`
 c2 <- function(tab, country, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t11))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
@@ -268,7 +268,7 @@ c2 <- function(tab, country, nested = TRUE) {
     select(Year, Exports = `Canada Total Exports`, Imports = `Canada Imports`) %>%
     ## gather long
     pivot_longer(-c("Year"), names_to = "Var", values_to = "value")
-
+  
   ## set ylim maximum to next rounded UP value past max, ylim min to rounded past lowest Trade Balance
   max_value <- max(tab$value)
   ymax_rnd <- plyr::round_any(max_value, 100000000, f = ceiling)
@@ -307,7 +307,7 @@ c2 <- function(tab, country, nested = TRUE) {
     ## if ymax_rnd is not a multiple of break_seq, make next break_seq the max instead
     ymax_rnd <- break_seq*(ceiling(ymax_rnd / break_seq))
   }
-
+  
   ymin_rnd <- plyr::round_any(min(tab_line$`Trade Balance`), 100000000, f = floor)
   if(min(tab_line$`Trade Balance`) > -50000000) {
     ## for countries with much smaller min value, want smaller rounded accuracy
@@ -324,19 +324,19 @@ c2 <- function(tab, country, nested = TRUE) {
     #ylim_min_rnd <- (-1)*(break_seq*(janitor::round_half_up(ymin_rnd / break_seq*(-1))))
     ylim_min_rnd <- break_seq*(floor(ymin_rnd / break_seq))
   }
-
+  
   tab %>%
     ggplot2::ggplot(mapping = aes(x = Year)) +
     ### * add bars (Exports & Imports), need fill here for legend, black outline; http://www.sthda.com/english/wiki/ggplot2-barplots-quick-start-guide-r-software-and-data-visualization
     geom_col(aes(y = value, fill = Var), color = "black", position = position_dodge()) +
     ## change fill to #17A1E3 (RGB 23 161 227) and #DDE2ED (RGB 221 226 237)
     scale_fill_manual(values = c("#17A1E3", "#DDE2ED"), name = "") +
-
+    
     ### * add line of %, need color here for legend
     geom_line(data = tab_line, aes(x = Year, y = `Trade Balance`, group = 1, color = "Balance of Trade"), size = 1) +
     ## change color to #234275 (RGB 35 66 117)
     scale_color_manual(values = c("#234275"), name = "") +
-
+    
     ### * format y-axis
     scale_y_continuous(limits = c(ylim_min_rnd, ymax_rnd),
                        breaks = c(seq(ylim_min_rnd, 0, break_seq), seq(0, ymax_rnd, break_seq)),
@@ -368,17 +368,17 @@ c2 <- function(tab, country, nested = TRUE) {
 ##       line = Balance of Trade, t12 `Service Trade Balance`
 ## ** NOTE: c3 should NOT appear when data is unavailable (i.e., when Index$X8 == "XX") **
 c3 <- function(tab, country, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t12))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
     filter(Year >= max(as.numeric(Year))-9)
-
+  
   ## if tab is empty, i.e., no Service results for that country, skip this chart
   if(dim(tab)[1] > 0) {
     ## get line data
@@ -388,7 +388,7 @@ c3 <- function(tab, country, nested = TRUE) {
       select(Year, Exports = `Service Exports`, Imports = `Service Imports`) %>%
       ## gather long
       pivot_longer(-c("Year"), names_to = "Var", values_to = "value")
-
+    
     ## set ylim maximum to next rounded UP value past max, ylim min to rounded past lowest Trade Balance
     max_value <- max(tab$value)
     ymax_rnd <- plyr::round_any(max_value, 200, f = ceiling)
@@ -417,7 +417,7 @@ c3 <- function(tab, country, nested = TRUE) {
       ## if ymax_rnd is not a multiple of break_seq, make next break_seq the max instead
       ymax_rnd <- break_seq*(ceiling(ymax_rnd / break_seq))
     }
-
+    
     ymin_rnd <- plyr::round_any(min(tab_line$`Trade Balance`), 100, f = floor)
     if(ymin_rnd >= 0) {
       ## set ylim minimum to 0 (all numbers are positive)
@@ -429,19 +429,19 @@ c3 <- function(tab, country, nested = TRUE) {
       ## minimum `Trade Balance` more than one break_seq less than zero, find how many times more, round up, multiply by break_seq
       ylim_min_rnd <- break_seq*(floor(ymin_rnd / break_seq))
     }
-
+    
     p <- tab %>%
       ggplot2::ggplot(mapping = aes(x = Year)) +
       ### * add bars (Exports & Imports), need fill here for legend, black outline; http://www.sthda.com/english/wiki/ggplot2-barplots-quick-start-guide-r-software-and-data-visualization
       geom_col(aes(y = value, fill = Var), color = "black", position = position_dodge()) +
       ## change fill to #17A1E3 (RGB 23 161 227) and #DDE2ED (RGB 221 226 237)
       scale_fill_manual(values = c("#17A1E3", "#DDE2ED"), name = "") +
-
+      
       ### * add line of %, need color here for legend
       geom_line(data = tab_line, aes(x = Year, y = `Trade Balance`, group = 1, color = "Balance of Trade"), size = 1) +
       ## change color to #234275 (RGB 35 66 117)
       scale_color_manual(values = c("#234275"), name = "") +
-
+      
       ### * format y-axis
       scale_y_continuous(limits = c(ylim_min_rnd, ymax_rnd),
                          breaks = c(seq(ylim_min_rnd, 0, break_seq), seq(0, ymax_rnd, break_seq)),
@@ -460,7 +460,7 @@ c3 <- function(tab, country, nested = TRUE) {
       )
     p
   } else {
-
+    
   }
 }
 #c3(tab = t12, country = "Australia", nested = TRUE)
@@ -469,17 +469,17 @@ c3 <- function(tab, country, nested = TRUE) {
 ## c4: Year-over-Year % Growth in GDP of {{country}}:
 ##       line = % change, t13 value
 c4 <- function(tab, country, nested = TRUE, source_text) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t13))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
     filter(Year >= max(as.numeric(Year))-9)
-
+  
   ## set y maximum to next rounded UP value past max, y minimum to rounded past lowest value
   max_value <- max(tab$value)
   ymax_rnd <- plyr::round_any(max_value, 1, f = ceiling)
@@ -495,7 +495,7 @@ c4 <- function(tab, country, nested = TRUE, source_text) {
       ymax_rnd <- ymax_rnd + 1
     }
   }
-
+  
   min_value <- min(tab$value)
   ymin_rnd <- plyr::round_any(min_value, 1, f = floor)
   if(ymin_rnd >= 0) {
@@ -508,12 +508,12 @@ c4 <- function(tab, country, nested = TRUE, source_text) {
     ## minimum value more than one break_seq less than zero, set y min to next break_seq
     ymin_rnd <- break_seq*(floor(ymin_rnd / break_seq))
   }
-
+  
   p <- tab %>%
     ggplot2::ggplot(mapping = aes(x = Year)) +
     ### * add line of %, color #234275 (RGB 35 66 117)
     geom_line(aes(y = value, group = 1), size = 1, color = "#234275") +
-
+    
     ### * format y-axis
     scale_y_continuous(limits = c(ymin_rnd, ymax_rnd),
                        breaks = c(seq(ymin_rnd, 0, break_seq), seq(0, ymax_rnd, break_seq)),
@@ -534,14 +534,14 @@ c4 <- function(tab, country, nested = TRUE, source_text) {
           ## moves y-axis title to top of axis; smaller font size
           axis.title.y = element_text(size = rel(0.8), angle = 0, vjust = 1.1)
     )
-
+  
   if(ymin_rnd < 0) {
     ## if ymin is less than zero, add light grey dashed line at y=0
     p <- p + geom_hline(yintercept = 0, linetype = 2, color = "grey")
   }
-
+  
   p
-
+  
 }
 #c4(tab = t13, country = "Australia", nested = TRUE, source_text = "")
 
@@ -549,18 +549,18 @@ c4 <- function(tab, country, nested = TRUE, source_text) {
 ## c5: Immigrants to BC from {{country}}:
 ##       line = Persons, t10 `Immigrants (Persons)`
 c5 <- function(tab, country, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t10))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
     filter(Year >= max(as.numeric(Year))-9) %>%
     rename(Persons = `Immigrants (Persons)`)
-
+  
   ## set y maximum to next rounded UP Persons past max
   max_value <- max(tab$Persons, na.rm = TRUE)
   #if(max_value == -Inf) { max_value <- 0 }
@@ -596,14 +596,14 @@ c5 <- function(tab, country, nested = TRUE) {
     break_seq <- 5
     ymax_rnd <- plyr::round_any(max_value, 10, f = ceiling)
   }
-
+  
   tab %>%
     ## drop NA values so don't get warning
     filter(!is.na(Persons)) %>%
     ggplot2::ggplot(mapping = aes(x = Year)) +
     ### * add line of %, color #234275 (RGB 35 66 117)
     geom_line(aes(y = Persons, group = 1), size = 1, color = "#234275") +
-
+    
     ### * format y-axis
     scale_y_continuous(limits = c(0, ymax_rnd),
                        breaks = seq(0, ymax_rnd, break_seq),
@@ -625,7 +625,7 @@ c5 <- function(tab, country, nested = TRUE) {
           ## moves y-axis title to top of axis; smaller font size
           axis.title.y = element_text(size = rel(0.8), angle = 0, vjust = 1.1)
     )
-
+  
 }
 #c5(tab = t10, country = "Australia", nested = TRUE)
 
@@ -633,18 +633,18 @@ c5 <- function(tab, country, nested = TRUE) {
 ## c6: Travellers from {{country}} Entering Through BC:
 ##       line = Thousands, t10 `Travellers (Persons)`
 c6 <- function(tab, country, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t10))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{country}}'s rows
     filter(Country == {{country}}) %>%
     ## get just specified years
     filter(Year >= max(as.numeric(Year))-9) %>%
     rename(Persons = `Travellers (Persons)`)
-
+  
   ## set y maximum to next rounded UP Persons past max
   max_value <- max(tab$Persons, na.rm = TRUE)
   ymax_rnd <- plyr::round_any(max_value, 50000, f = ceiling)
@@ -669,14 +669,14 @@ c6 <- function(tab, country, nested = TRUE) {
     break_seq <- 100
     ymax_rnd <- plyr::round_any(max_value, 100, f = ceiling)
   }
-
+  
   if(max_value < 1000) {
     ## for countries with few travellers (< 1,000) to BC
     tab %>%
       ggplot2::ggplot(mapping = aes(x = Year)) +
       ### * add line of %, color #234275 (RGB 35 66 117)
       geom_line(aes(y = Persons, group = 1), size = 1, color = "#234275") +
-
+      
       ### * format y-axis
       scale_y_continuous(limits = c(0, ymax_rnd),
                          breaks = seq(0, ymax_rnd, break_seq),
@@ -703,7 +703,7 @@ c6 <- function(tab, country, nested = TRUE) {
       ggplot2::ggplot(mapping = aes(x = Year)) +
       ### * add line of %, color #234275 (RGB 35 66 117)
       geom_line(aes(y = Persons / 1000, group = 1), size = 1, color = "#234275") +
-
+      
       ### * format y-axis
       scale_y_continuous(limits = c(0, ymax_rnd / 1000),
                          breaks = seq(0, ymax_rnd / 1000, break_seq / 1000),
@@ -736,12 +736,12 @@ c6 <- function(tab, country, nested = TRUE) {
 ##       gray bars = Imports, t08 `Imports`
 ##       line = Balance of Trade, t08 `Trade Balance`
 c7 <- function(tab, state, nested = TRUE) {
-
+  
   ## if tab is nested, unnest it
   if(nested == TRUE) {
     tab <- tab %>% unnest(cols = c(t08))
   }
-  tab <- tab %>%
+  tab <- tab %>% 
     ## get just {{state}}'s rows
     filter(state == {{state}}) %>%
     ## get just specified years
@@ -754,7 +754,7 @@ c7 <- function(tab, state, nested = TRUE) {
     select(Year, Exports, Imports) %>%
     ## gather long
     pivot_longer(-c("Year"), names_to = "Var", values_to = "value")
-
+  
   ## set ylim maximum to next rounded UP value past max, ylim min to rounded past lowest Trade Balance
   max_value <- max(tab$value)
   ymax_rnd <- plyr::round_any(max_value, 5, f = ceiling)
@@ -789,7 +789,7 @@ c7 <- function(tab, state, nested = TRUE) {
     ## if ymax_rnd is not a multiple of break_seq, make next break_seq the max instead
     ymax_rnd <- break_seq*(ceiling(ymax_rnd / break_seq))
   }
-
+  
   ymin_rnd <- plyr::round_any(min(tab_line$`Trade Balance`), 5, f = floor)
   if(min(tab_line$`Trade Balance`) > -3) {
     ## for countries with smaller min value, want smaller rounded accuracy
@@ -806,19 +806,19 @@ c7 <- function(tab, state, nested = TRUE) {
     #ylim_min_rnd <- (-1)*(break_seq*(janitor::round_half_up(ymin_rnd / break_seq*(-1))))
     ylim_min_rnd <- break_seq*(floor(ymin_rnd / break_seq))
   }
-
+  
   tab %>%
     ggplot2::ggplot(mapping = aes(x = Year)) +
     ### * add bars (Exports & Imports), need fill here for legend, black outline; http://www.sthda.com/english/wiki/ggplot2-barplots-quick-start-guide-r-software-and-data-visualization
     geom_col(aes(y = value, fill = Var), color = "black", position = position_dodge()) +
     ## change fill to #17A1E3 (RGB 23 161 227) and #DDE2ED (RGB 221 226 237)
     scale_fill_manual(values = c("#17A1E3", "#DDE2ED"), name = "") +
-
+    
     ### * add line of %, need color here for legend
     geom_line(data = tab_line, aes(x = Year, y = `Trade Balance`, group = 1, color = "Balance of Trade"), size = 1) +
     ## change color to #234275 (RGB 35 66 117)
     scale_color_manual(values = c("#234275"), name = "") +
-
+    
     ### * format y-axis
     scale_y_continuous(limits = c(ylim_min_rnd, ymax_rnd),
                        breaks = c(seq(ylim_min_rnd, 0, break_seq), seq(0, ymax_rnd, break_seq)),
@@ -926,7 +926,7 @@ sStat2 <- createStyle(wrapText = TRUE, valign = "center", halign = "center")
 sCenter <- createStyle(valign = "center")
 sBold <- createStyle(textDecoration = "bold")
 sChart <- createStyle(fontColour = "#2A64AB", textDecoration = "bold", fontSize = 14, valign = "center", halign = "center")
-sSource <- createStyle(valign = "center", fontSize = 8)  ## wrapText = TRUE,
+sSource <- createStyle(valign = "center", fontSize = 8)  ## wrapText = TRUE, 
 sHeader <- createStyle(wrapText = TRUE, valign = "center", halign = "center", border = "TopBottom", borderStyle = getOption("openxlsx.borderStyle", "thin"))
 sNum    <- createStyle(valign = "center", halign = "center", numFmt = "0")  ## Perc: numFmt = "0%"
 

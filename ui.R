@@ -13,13 +13,15 @@
 ## This is a Shiny web application. You can run the application by clicking the 'Run App' button above.
 
 ## Define UI for application
-shinyUI(tagList(dashboardPage(title = "Trade Profiles",
-
+shinyUI(tagList(tags$head(includeHTML("www/google-analytics.html")),
+                dashboardPage(title = "Trade Profiles",
+                              
+                              
                               # dashboard header
                               dashboardHeader(
                                 tags$li(class = "dropdown",
                                         tags$style(type = 'text/css', '.skin-blue .main-header .navbar{display:none;}')),
-
+                                
                                 # dashboard title
                                 title = tags$div(class = "banner",
                                                  a(href = "https://gov.bc.ca",
@@ -29,7 +31,7 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                                  h1("Trade Profiles",
                                                     style = "font-weight:400; color:white; margin: 5px 5px 0 18px;")),
                                 titleWidth = 700),
-
+                              
                               # dashboard sidebar
                               dashboardSidebar(
                                 br(),
@@ -38,7 +40,7 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                   tags$style(HTML(".sidebar {
                                         height: 90vh; overflow-y: auto;
                                     }"
-                                                  ) # close HTML
+                                                  ) # close HTML       
                                              )      # close tags$style
                                 ),                  # close tags$Head
                                 sidebarMenu(id = "sidebar",
@@ -47,8 +49,8 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                             menuItem("Country Fact Sheets", tabName = "profilestab", icon = NULL,
                                                      uiOutput("note"),
                                                      menuSubItem(tabName = "profilestab", icon = NULL,
-                                                                 selectInput("Country",
-                                                                             label = "Country",
+                                                                 selectInput("Country", 
+                                                                             label = "Country", 
                                                                              selected = "Click here to choose a country",
                                                                              choices = c("Click here to choose a country", countries))),
                                                      br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
@@ -63,7 +65,7 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                                      uiOutput("note_states"),
                                                      menuSubItem(tabName = "statestab", icon = NULL,
                                                                  selectInput("state", ## this must match params in .Rmd
-                                                                             label = "USA State",
+                                                                             label = "USA State", 
                                                                              selected = "Click here to choose a state",
                                                                              choices = c("Click here to choose a state", states))),
                                                      br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
@@ -76,28 +78,28 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                             )
                                 )
                               ),
-
+                              
                               # dashboard body
                               dashboardBody(
                                 tags$style(type = "text/css",
                                            ".shiny-output-error {visibility: hidden;}",
                                            ".shiny-output-error:before {visibility: hidden;}"),
                                 tags$script(HTML("$('body').addClass('fixed');")),
-                                tags$head(tags$meta(name = "viewport", content = "width=1500")), # mobile friendly version of the app
+                                tags$head(tags$meta(name = "viewport", content = "width=1500")), # mobile friendly version of the app 
                                 tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
                                 tabItems(
                                   tabItem(tabName = "hometab",
                                           fluidRow(
                                             box(title = "Aggregate Data for B.C. & Canada",
                                                 width = 12,
-                                                status = "success",
+                                                status = "success", 
                                                 solidHeader = TRUE,
-                                                collapsible = FALSE,
+                                                collapsible = FALSE,    
                                                 ## table 1
                                                 h4(paste0("Top five B.C. origin exports to world, ", year),
                                                    style = "color:#2A64AB; font-weight: bold"),
                                                 DT::datatable(table1, rownames = T,   ## set rownames TRUE, so can reference them in formatStyle
-                                                              options = list(dom = 't',
+                                                              options = list(dom = 't', 
                                                                              columnDefs = list(list(className = 'dt-right', targets = 2:3),  ## right alighn columns 2&3
                                                                 list(visible = F, targets = 0))), ## hide the rownames
                                                               height = "100%") %>%
@@ -106,23 +108,23 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                                 ## table 2
                                                 h4(paste0("Top five Canadian exports to world, ", year),
                                                    style = "color:#2A64AB; font-weight: bold"),
-                                                DT::datatable(table2, rownames = T,
-                                                              options = list(dom = 't', columnDefs = list(list(className = 'dt-right', targets = 2:3), list(visible = F, targets = 0))),
+                                                DT::datatable(table2, rownames = T, 
+                                                              options = list(dom = 't', columnDefs = list(list(className = 'dt-right', targets = 2:3), list(visible = F, targets = 0))), 
                                                               height = "100%") %>%
                                                   formatStyle(0, target = "row", fontWeight = styleEqual(levels = dim(table2)[1], values = 'bold')),
                                                 br(),br(),
                                                 ## table 3
                                                 h4(paste0("Top five Canadian imports from world, ", year),
                                                    style = "color:#2A64AB; font-weight: bold"),
-                                                DT::datatable(table3, rownames = T,
-                                                              options = list(dom = 't',  columnDefs = list(list(className = 'dt-right', targets = 2:3), list(visible = F, targets = 0))),
+                                                DT::datatable(table3, rownames = T, 
+                                                              options = list(dom = 't',  columnDefs = list(list(className = 'dt-right', targets = 2:3), list(visible = F, targets = 0))), 
                                                               height = "100%") %>%
                                                   formatStyle(0, target = "row", fontWeight = styleEqual(levels = dim(table3)[1], values = 'bold')),
                                                 br(),br(),
                                                 ## table 4
-                                                h4(paste0("Provincial distribution of exports to world, ", year),
+                                                h4(paste0("Provincial distribution of exports to world, ", year), 
                                                    style = "color:#2A64AB; font-weight: bold"),
-                                                DT::datatable(table4,
+                                                DT::datatable(table4, 
                                                               rownames = T,
                                                               options = list(dom = 't',
                                                                              pageLength = -1, ## pageLength = -1 shows ALL rows
@@ -153,7 +155,7 @@ shinyUI(tagList(dashboardPage(title = "Trade Profiles",
                                                 uiOutput("md_file_states")
                                             )))
                                   )  # close tabItems
-
+                                
                                 ,
                                 # BC gov required footer
                                 tags$footer(class="footer",

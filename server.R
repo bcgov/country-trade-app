@@ -27,7 +27,7 @@ shinyServer(function(input, output, session) {
              can click on the `Download XLSX` <br />
              button below to generate an Excel file <br />
              or the `Download PDF` button for a <br />
-             PDF version."),
+             PDF version."), 
         style = "padding: 10px 10px 10px 30px;")
   })
   ### * STATE VERSION ** ##
@@ -40,11 +40,11 @@ shinyServer(function(input, output, session) {
              can click on the `Download State XLSX` <br />
              button below to generate an Excel file <br />
              or the `Download State PDF` button for a <br />
-             PDF version."),
+             PDF version."), 
         style = "padding: 10px 10px 10px 30px;")
   })
-
-
+  
+  
   ## Runs .RMD file to create html webpage
   output$md_file <- renderUI({
     includeHTML(rmarkdown::render("CountryFactSheet.Rmd",
@@ -60,7 +60,7 @@ shinyServer(function(input, output, session) {
 
   ## Adds XLSX download functionality to sidebar
   output$DownloadXLSX <- downloadHandler(
-
+    
     filename = function() { paste0("Fact", input$Country, ".xlsx") },
 
     content = function(file) {
@@ -76,28 +76,28 @@ shinyServer(function(input, output, session) {
   )
   ### * STATE VERSION ** ##
   output$DownloadXLSX_states <- downloadHandler(
-
+    
     filename = function() { paste0("Fact", input$state, ".xlsx") },
-
+    
     content = function(file) {
-
+      
       ## Set up parameters to pass to Rmd document
       params <- list(state = input$state)
-
+      
       ## Read in xlsx workbook made/knit in .Rmd, then save it for download
       wb <- loadWorkbook(file = paste0("Fact", input$state, ".xlsx"))
       saveWorkbook(wb, file = file, overwrite = TRUE)
-
+      
     }
   )
-
+  
   ## Adds PDF download functionality to sidebar
   output$DownloadPDF <- downloadHandler(
-
+    
     filename = function() { paste0("Fact", input$Country, ".pdf") },
-
+    
     content = function(file) {
-
+      
       # this appears to do nothing
       # ## trying to get fontspec & setmainfont to work
       # tempsty <- file.path(tempdir(), "unicode-math.sty")
@@ -108,8 +108,8 @@ shinyServer(function(input, output, session) {
       # file.copy("unicode-math-table.tex", tempxesty1, overwrite = TRUE)
       # tempxesty2 <- file.path(tempdir(), "unicode-math-luatex.sty")
       # file.copy("unicode-math-luatex.sty", tempxesty, overwrite = TRUE)
-
-      out = rmarkdown::render("CountryFactSheet.Rmd",
+      
+      out = rmarkdown::render("CountryFactSheet.Rmd", 
                               output_file = file,
                               # output_dir = tempdir(),
                               output_format = "pdf_document",
@@ -121,19 +121,19 @@ shinyServer(function(input, output, session) {
   )
   ### * STATE VERSION ** ##
   output$DownloadPDF_states <- downloadHandler(
-
+    
     filename = function() { paste0("Fact", input$state, ".pdf") },
-
+    
     content = function(file) {
-
-      out = rmarkdown::render("StateFactSheet.Rmd",
+      
+      out = rmarkdown::render("StateFactSheet.Rmd", 
                               output_file = file,
                               output_format = "pdf_document",
                               envir = new.env(),
                               params = list(state = input$state)
       )
     }
-
+    
   )
 
 })

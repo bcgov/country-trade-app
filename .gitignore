@@ -4,7 +4,11 @@
 .Ruserdata
 
 data/
+sandbox/
 notes.R
 *.xlsx
 *.png
 *.html
+*.docx
+*.sty
+*.tex

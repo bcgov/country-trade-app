@@ -290,7 +290,7 @@ gen.table <- function(data, country) {
   pop <- temp %>% select(Population) %>% pull() %>% prettyNum(big.mark = ",")
   apgr <- temp %>% select(`Pop.Growth.%`) %>% pull() %>% paste0(., "%")
   gdp <- temp %>% select(`GDP.($US.billions).(Purchasing.Power.Parity)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
-  gdp2 <- temp %>% select(`Per.Capita.GDP.($US.2017)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
+  gdp2 <- temp %>% select(`Per.Capita.GDP.($US.2021)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
   gdp3 <- temp %>% select(`Per.Capita.GDP.($US.Current)`) %>% pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
   gdp4 <- temp %>% select(`Real.GDP.Growth.%`) %>% pull() %>% paste0(., "%")
 
@@ -308,7 +308,7 @@ gen.table <- function(data, country) {
     select(Var, value, Year) %>%
     mutate(Var = case_when(Var == "Pop.Growth.%" ~ "Annual Population Growth Rate",
                            Var == "GDP.($US.billions).(Purchasing.Power.Parity)" ~ "GDP (US$ billions)*",
-                           Var == "Per.Capita.GDP.($US.2017)" ~ "Per Capita GDP (US$ 2017)*",
+                           Var == "Per.Capita.GDP.($US.2021)" ~ "Per Capita GDP (US$ 2021)*",
                            Var == "Per.Capita.GDP.($US.Current)" ~ "Per Capita GDP (US$ Current)*",
                            Var == "Real.GDP.Growth.%" ~ "GDP Real Growth",
                            TRUE ~ as.character(Var))) %>%
@@ -318,7 +318,7 @@ gen.table <- function(data, country) {
 
   if(country %in% c("ASEAN", "China & Hong Kong", "EU + UK")){
 
-    t <- t %>% filter(Var != "Per Capita GDP (US$ 2017)*")
+    t <- t %>% filter(Var != "Per Capita GDP (US$ 2021)*")
 
   }else {
 
@@ -796,6 +796,11 @@ dataWorldX <- make.numeric(data = dataWorldX, colVar = "SITC")
 # dataWorldX <- dataWorldX[1:endRow, ]; rm(endRow)
 # dataWorldX <- dataWorldX %>% mutate_at(vars(c(names(.)[2]:(which(names(.) == "Label")-1))), as.numeric)
 
+dataWorldM <- make.numeric(data = dataWorldM, colVar = "SITC")
+# endRow <- which(tolower(dataWorldX$SITC) == "total")
+# dataWorldX <- dataWorldX[1:endRow, ]; rm(endRow)
+# dataWorldX <- dataWorldX %>% mutate_at(vars(c(names(.)[2]:(which(names(.) == "Label")-1))), as.numeric)
+
 
 ### * separate out time series datasets
 ## if you get this error "Error in initialize(...) : attempt to use zero-length variable name", you
@@ -1256,5 +1261,56 @@ nested_data_countries <- t01 %>%
   left_join(t15, by = "Country") %>%
   left_join(t16, by = "Country")
 
+library(dplyr)
+library(purrr)
+
+# Save the original nested list as RDS (unchanged)
 saveRDS(nested_data_countries, "data/nested_data_countries.rds")
+
+
+# Make a copy of the list
+named_list <- nested_data_countries
+
+# Assign names only where possible
+names(named_list) <- sapply(named_list, function(x) {
+  if (is.data.frame(x) && "Country" %in% names(x)) {
+    as.character(x$Country[1])
+  } else {
+    NA
+  }
+})
+
+# Replace any NA names with default values
+names(named_list)[is.na(names(named_list))] <- paste0("Country_", seq_len(sum(is.na(names(named_list)))))
+
+# Flatten and clean
+library(dplyr)
+library(purrr)
+
+flat_data <- bind_rows(named_list, .id = "Country")
+flat_data_clean <- flat_data %>%
+  mutate(across(where(is.list), ~ map_chr(., toString)))
+
+
+# Save the data
+write.csv(flat_data_clean, "data/nested_data_countries.csv", row.names = FALSE)
+
+# Create the note
+note <- "Data sourced from Statistics Canada the International Monetary Fund (IMF), the International Trade Centre (ITC), Immigration, Refugees and Citizenship Canada (IRCC), and is current as of"
+note_date <- format(Sys.Date(), "%B %d, %Y")
+full_note <- paste0(note, " ", note_date, ".")
+
+# Get number of columns in the dataset
+num_cols <- ncol(flat_data_clean)
+
+# Create two blank rows and the note row
+blank_row <- rep("", num_cols)
+note_row <- c(full_note, rep("", num_cols - 1))
+
+# Combine into a data frame
+extra_rows <- rbind(blank_row, blank_row, note_row)
+extra_df <- as.data.frame(extra_rows, stringsAsFactors = FALSE)
+
+# Append to the CSV
+write.table(extra_df, "data/nested_data_countries.csv", sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
 

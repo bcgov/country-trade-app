@@ -24,15 +24,15 @@ library(tidyverse)
 library(openxlsx)
 library(janitor)
 
-options(scipen=999)
+options(scipen=999) 
 
 
 ## functions ----
 
 ### * get.last.year() function pulls the specified row's last column to get the last year in the data
 get.last.year <- function(data, colVar, rowVar) {
-  data %>%
-    rename(colVar = {{colVar}}) %>%
+  data %>% 
+    rename(colVar = {{colVar}}) %>% 
     filter(colVar == rowVar) %>%
     select(ncol(data)) %>%
     pull() %>%
@@ -89,14 +89,14 @@ multiply.by.thousand <- function(var) { var = var*1000  }
 
 ### * top5.Cda.table() function pulls top 5 commodities in CDN $Millions and Share of Total %, for specified state
 top5.Cda.table <- function(data, state) {
-
+  
   ## get TOTAL row temporarily
-  temp <- data %>%
-    rename(state = {{state}}) %>%
-    select(Commodity, state) %>%
+  temp <- data %>% 
+    rename(state = {{state}}) %>% 
+    select(Commodity, state) %>% 
     filter(Commodity == "TOTAL") %>%
     mutate(Commodity = "Total")
-
+  
   data %>%
     rename(state = {{state}}) %>%
     ## get just Commodity and state columns
@@ -119,20 +119,20 @@ top5.Cda.table <- function(data, state) {
     ## add in state name as first column
     mutate(state = rlang::quo_text(enquo(state))) %>%
     select(state, everything())
-
+  
 }
 
 
 ### * top5.US.table() function pulls top 5 "var"s in US $Millions and Share of Total %, for specified state
 top5.US.table <- function(data, var, state) {
-
+  
   ## get TOTAL row temporarily
-  temp <- data %>%
-    rename(var = {{var}}, state = {{state}}) %>%
-    select(var, state) %>%
+  temp <- data %>% 
+    rename(var = {{var}}, state = {{state}}) %>% 
+    select(var, state) %>% 
     filter(var == "TOTAL") %>%
     mutate(var = "Total")
-
+  
   data %>%
     rename(var = {{var}}, state = {{state}}) %>%
     ## get just var and state columns
@@ -155,14 +155,14 @@ top5.US.table <- function(data, var, state) {
     ## add in state name as first column
     mutate(state = rlang::quo_text(enquo(state))) %>%
     select(state, everything())
-
+  
 }
 
 
 ### * prov.table() function gets provincial distribution of exports to specified state
 prov.table <- function(data, state) {
   stateTotal <- data %>% select({{state}}) %>% sum(na.rm = TRUE)
-
+  
   data %>%
     ## rename state column
     rename(state = {{state}}) %>%
@@ -188,41 +188,41 @@ prov.table <- function(data, state) {
 
 ### * gen.table() function gets general information, for specified state
 gen.table <- function(data, state) {
-
-  data <- data %>%
+  
+  data <- data %>% 
     rename(GDP_chained = starts_with("GDP.(US.$Millions.Chained"),
            real_chained = starts_with("Real.Per.Capita.GDP.(Chained"))
-
+  
   temp <- data %>% filter(X2 == {{state}})
-
+  
   ## pull stats
   pop <- temp %>% select(Population) %>% pull() %>% prettyNum(big.mark = ",")
-  apgr <- temp %>% select(`Pop.Growth.%`) %>%
+  apgr <- temp %>% select(`Pop.Growth.%`) %>% 
     mutate(`Pop.Growth.%` = janitor::round_half_up(as.numeric(`Pop.Growth.%`), digits = 1)) %>%
     pull() %>% paste0(., "%")
   # gdp <- temp %>% select(`GDP.(US.$Millions.Chained.2012)`) %>%
   #   mutate(`GDP.(US.$Millions.Chained.2012)` = janitor::round_half_up(as.numeric(`GDP.(US.$Millions.Chained.2012)`), digits = 0)) %>%
   #   pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
-  # gdp2 <- temp %>% select(`Real.Per.Capita.GDP.(Chained.2012)`) %>%
-  #   mutate(`Real.Per.Capita.GDP.(Chained.2012)` = janitor::round_half_up(as.numeric(`Real.Per.Capita.GDP.(Chained.2012)`), digits = 0)) %>%
+  # gdp2 <- temp %>% select(`Real.Per.Capita.GDP.(Chained.2012)`) %>% 
+  #   mutate(`Real.Per.Capita.GDP.(Chained.2012)` = janitor::round_half_up(as.numeric(`Real.Per.Capita.GDP.(Chained.2012)`), digits = 0)) %>% 
   #   pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
   gdp <- temp %>% select(GDP_chained) %>%
     mutate(GDP_chained = janitor::round_half_up(as.numeric(GDP_chained), digits = 0)) %>%
     pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
-  gdp2 <- temp %>% select(real_chained) %>%
-    mutate(real_chained = janitor::round_half_up(as.numeric(real_chained), digits = 0)) %>%
+  gdp2 <- temp %>% select(real_chained) %>% 
+    mutate(real_chained = janitor::round_half_up(as.numeric(real_chained), digits = 0)) %>% 
     pull() %>% prettyNum(big.mark = ",") %>% paste0("$", .)
-  gdp3 <- temp %>% select(`GDP.Growth.%`) %>%
+  gdp3 <- temp %>% select(`GDP.Growth.%`) %>% 
     mutate(`GDP.Growth.%` = janitor::round_half_up(as.numeric(`GDP.Growth.%`), digits = 1)) %>%
     pull() %>% paste0(., "%")
-
+  
   ## pull last year data was available
-  yrs <- data %>%
+  yrs <- data %>% 
     slice(1) %>%
-    select(Population:`GDP.Growth.%`) %>%
-    mutate_if(is.numeric, as.character) %>%
+    select(Population:`GDP.Growth.%`) %>% 
+    mutate_if(is.numeric, as.character) %>% 
     pivot_longer(everything(), names_to = "Var", values_to = "Year", values_drop_na = TRUE)
-
+  
   ## put all into table, and add in state name as first column
   tibble::tibble(value = c(pop, apgr, gdp, gdp2, gdp3), yrs) %>%
     select(Var, value, Year) %>%
@@ -235,41 +235,41 @@ gen.table <- function(data, state) {
                            TRUE ~ as.character(Var))) %>%
     mutate(state = {{state}}) %>%
     select(state, everything())
-
+  
 }
 
 
 ### * high.tech.table() function gets High Technology Trade data, for specified state and years
 high.tech.table <- function(data, state) {
-
+  
   ## get Re-Exports info
-  RX <- rows.to.colnames(data = data, searchCol = BC.Trade.in.High.Technology.Goods,
-                         startRow = "Re-Exports", endRow = "Imports") %>%
+  RX <- rows.to.colnames(data = data, searchCol = BC.Trade.in.High.Technology.Goods, 
+                         startRow = "Re-Exports", endRow = "Imports") %>% 
     filter(`Re-Exports` == {{state}}) %>%
     select(-`Re-Exports`) %>%
     mutate_if(is.character, as.numeric) %>%
     pivot_longer(everything(), names_to = "Year", values_to = "Re-Exports")
-
+  
   ## get Imports info
   Im <- data %>%
     add_row(BC.Trade.in.High.Technology.Goods = "zzz") %>%
-    rows.to.colnames(searchCol = BC.Trade.in.High.Technology.Goods,
-                     startRow = "Imports", endRow = "zzz") %>%
+    rows.to.colnames(searchCol = BC.Trade.in.High.Technology.Goods, 
+                     startRow = "Imports", endRow = "zzz") %>% 
     filter(`Imports` == {{state}}) %>%
     select(-`Imports`) %>%
     mutate_if(is.character, as.numeric) %>%
     pivot_longer(everything(), names_to = "Year", values_to = "Imports")
-
+  
   ## get Domestic Exports info
-  rows.to.colnames(data = data, searchCol = BC.Trade.in.High.Technology.Goods,
-                   startRow = "Domestic Exports", endRow = "Re-Exports") %>%
+  rows.to.colnames(data = data, searchCol = BC.Trade.in.High.Technology.Goods, 
+                   startRow = "Domestic Exports", endRow = "Re-Exports") %>% 
     filter(`Domestic Exports` == {{state}}) %>%
     select(-`Domestic Exports`) %>%
     mutate_if(is.character, as.numeric) %>%
     pivot_longer(everything(), names_to = "Year", values_to = "Domestic Exports") %>%
     ## add in Re-Exports and Imports info, calculate Trade Balance
-    left_join(RX, by = "Year") %>%
-    left_join(Im, by = "Year") %>%
+    left_join(RX, by = "Year") %>% 
+    left_join(Im, by = "Year") %>% 
     mutate(`Trade Balance` = `Domestic Exports` + `Re-Exports` - `Imports`) %>%
     mutate_if(is.numeric, divide.by.million) %>%
     mutate_if(is.numeric, janitor::round_half_up, digits = 1) %>%
@@ -279,44 +279,44 @@ high.tech.table <- function(data, state) {
     ## add in state name as first column
     mutate(state = {{state}}) %>%
     select(state, everything())
-
+  
 }
 
 
 ### * travel.table() function gets travel data, for specified state
 travel.table <- function(data, state) {
-
+  
   endRow <- (which(data$`TRIPS.TO.CANADA.(000)` == "CANADIAN TRIPS TO US (000)")-1)
   startRow <- which(data$`TRIPS.TO.CANADA.(000)` == "CANADIAN TRIPS TO US (000)")
   maxYear <- names(data)[ncol(data)]
-
+  
   ## pull trips from {{state}} to Canada data
-  TripsToCda <- data[1:endRow, 1:which(names(data) == "Rank")] %>%
+  TripsToCda <- data[1:endRow, 1:which(names(data) == "Rank")] %>% 
     filter(`TRIPS.TO.CANADA.(000)` == {{state}}) %>%
     mutate(Var = "TripsToCanada") %>%
     mutate_if(is.numeric, multiply.by.thousand)
-
+  
   ## pull money spent on trips from {{state}} to Canada data
-  SpentInCda <- data[1:endRow, which(names(data) == "SPENDING.IN.CANADA.($Cda.Millions)"):ncol(data)] %>%
+  SpentInCda <- data[1:endRow, which(names(data) == "SPENDING.IN.CANADA.($Cda.Millions)"):ncol(data)] %>% 
     filter(`SPENDING.IN.CANADA.($Cda.Millions)` == {{state}}) %>%
-    mutate(Var = "SpendingInCanada") %>%
+    mutate(Var = "SpendingInCanada") %>% 
     select(-`SPENDING.IN.CANADA.($Cda.Millions)`)
-
+  
   ## pull trips to {{state}} from Canada
   TripsToState <- data[startRow:nrow(data), 1:which(names(data) == "Rank")] %>%
     janitor::row_to_names(row_number = 1) %>%
     filter(`CANADIAN TRIPS TO US (000)` == {{state}}) %>%
-    mutate(Var = "TripsToState") %>%
+    mutate(Var = "TripsToState") %>% 
     select(-`CANADIAN TRIPS TO US (000)`) %>%
     mutate_if(is.numeric, multiply.by.thousand)
-
+  
   ## pull money spent on trips to {{state}} from Canada data
   SpentInState <- data[startRow:nrow(data), which(names(data) == "SPENDING.IN.CANADA.($Cda.Millions)"):ncol(data)] %>%
     janitor::row_to_names(row_number = 1) %>%
     filter(`SPENDING IN US ($Cda Millions)` == {{state}}) %>%
-    mutate(Var = "SpendingInState") %>%
+    mutate(Var = "SpendingInState") %>% 
     select(-`SPENDING IN US ($Cda Millions)`)
-
+  
   ## pull all together
   bind_rows(TripsToCda, SpentInCda, TripsToState, SpentInState) %>%
     ## add in state name, re-arrange columns, only include maxYear col of data
@@ -329,24 +329,24 @@ travel.table <- function(data, state) {
 
 ### * time.trade() function gets trade data for specified state
 time.trade <- function(BCX, CX, CTX, CM, state) {
-
+  
   ## get exports and imports data for specified state
-  BCX <- BCX  %>% mutate(Var = "BC Exports") %>%
+  BCX <- BCX  %>% mutate(Var = "BC Exports") %>% 
     rename(state = `BC Origin Exports`) %>% filter(state == {{state}})
-  CX <- CX %>% mutate(Var = "Canada Exports") %>%
+  CX <- CX %>% mutate(Var = "Canada Exports") %>% 
     rename(state = `Canada Origin Exports`) %>% filter(state == {{state}})
-  CTX <- CTX %>% mutate(Var = names(CTX)[1]) %>%
+  CTX <- CTX %>% mutate(Var = names(CTX)[1]) %>% 
     rename(state = `Canada Total Exports`) %>% filter(state == {{state}})
-  CM <- CM %>% mutate(Var = names(CM)[1]) %>%
+  CM <- CM %>% mutate(Var = names(CM)[1]) %>% 
     rename(state = `Canada Imports`) %>% filter(state == {{state}})
-
+  
   ## bind above data together
   BCX %>%
     bind_rows(CX) %>%
     bind_rows(CTX) %>%
     bind_rows(CM) %>%
     select(Var, everything()) %>%
-    mutate_at(vars(-"Var", -"state"), as.numeric) %>%
+    mutate_at(vars(-"Var", -"state"), as.numeric) %>% 
     ## flip data so Year is a column and Var becomes multiple columns
     pivot_longer(-c("Var", "state"), names_to = "Year", values_to = "value") %>%
     pivot_wider(names_from = "Var", values_from = "value") %>%
@@ -358,20 +358,20 @@ time.trade <- function(BCX, CX, CTX, CM, state) {
     ## add in state name as first column
     mutate(state = {{state}}) %>%
     select(state, everything())
-
+  
 }
 
 
 ### * time.gdp() function gets GDP % growth for specified state
 time.gdp <- function(data, state) {
-
-  data[, which(names(data) == "Percent.Change"):ncol(data)] %>%
+  
+  data[, which(names(data) == "Percent.Change"):ncol(data)] %>% 
     ## get specified state row
     filter(Percent.Change == {{state}}) %>%
     rename(state = Percent.Change) %>%
     ## gather data so Year is a column
     pivot_longer(-c("state"), names_to = "Year", values_to = "Percent.Change")
-
+  
 }
 
 
@@ -379,13 +379,13 @@ time.gdp <- function(data, state) {
 rank.data <- function(data, cols, var, state){
   data[, {{cols}}] %>%
     janitor::row_to_names(row_number = 1) %>%
-    select(state = names(.)[1], Value = {{var}}, Rank) %>%
+    select(state = names(.)[1], Value = {{var}}, Rank) %>% 
     mutate(Var = rlang::quo_text(enquo(var)),
            Value = as.numeric(Value),
-           Perc = 100 * Value / sum(Value, na.rm = TRUE)) %>%
+           Perc = 100 * Value / sum(Value, na.rm = TRUE)) %>% 
     filter(state == {{state}}) %>%
     select(state, Var, Rank, Perc)
-
+  
 }
 # rank.data(dataRankState, cols = 1:5, var = `BC Exports`, state = "Washington")
 # rank.data(dataRankState, cols = 9:13, var = `Canada Exports`, state = "Washington")
@@ -394,38 +394,38 @@ rank.data <- function(data, cols, var, state){
 
 ### * rank.as.country() function gets state's value for variable and adds it to "dataRank"
 rank.as.country <- function(data, dataAsCountry, cols1, cols2, var, state) {
-
+  
   stateVal <- data[, {{cols1}}] %>%
     janitor::row_to_names(row_number = 1) %>%
-    select(state = names(.)[1], Value = {{var}}) %>%
+    select(state = names(.)[1], Value = {{var}}) %>% 
     mutate(Value = as.numeric(Value)) %>%
     filter(state == {{state}}) %>%
     select(Value) %>%
     pull()
-
+  
   ## pull relevant var and cols2
   temp <- dataAsCountry[, {{cols2}}] %>%
     janitor::row_to_names(row_number = 1) %>%
     select(Country = names(.)[1], Value = {{var}})
-
+  
   ## get row index of row before "total" row
   lastRow <- min(which(str_detect(tolower(temp$Country), "total")))
-
+  
   ## replace last row with correct State name and replace old/wrong value with state's value
   temp[lastRow, "Country"] <- paste0(state, "_State")  ## b/c Georgia is BOTH a Country and a US State
   temp[lastRow, "Value"]   <- stateVal
-
-  temp %>%
-    mutate(Value = as.numeric(Value)) %>%
+  
+  temp %>% 
+    mutate(Value = as.numeric(Value)) %>% 
     filter(str_detect(Country, pattern = "TOTAL", negate = TRUE))
-
+  
 }
 # rank.as.country(dataRankState, dataAsCountry = dataRank, cols1 = 1:5, cols2 = 1:4, var = `BC Exports`, state = "Washington")
 
 
 ### * rank.bind() function runs rank.data() and binds info to gets importance of specified state relative to BC and Canada
 rank.bind <- function(data, dataAsCountry, state) {
-
+  
   ## run rank info for BC Exports
   tab <- rank.data(data, cols = 1:5, var = `BC Exports`, {{state}}) %>%
     ## rank info for Canada Exports
@@ -436,7 +436,7 @@ rank.bind <- function(data, dataAsCountry, state) {
            Var = case_when(Var == "`BC Exports`" ~ "BC Exports",
                            Var == "`Canada Exports`" ~ "Canada Exports",
                            Var == "`Canada Imports`" ~ "Canada Imports"))
-
+  
   ## create new ranks as though state was a separate country
   ## for BC Exports
   BCX <- rank.as.country(data, dataAsCountry, cols1 = 1:5, cols2 = 1:4, var = `BC Exports`, {{state}}) %>%
@@ -445,7 +445,7 @@ rank.bind <- function(data, dataAsCountry, state) {
     filter(Country == paste0(state, "_State")) %>%
     select(Rank) %>%
     pull()
-
+  
   ## for Canada Exports
   CX <- rank.as.country(data, dataAsCountry, cols1 = 9:13, cols2 = 8:12, var = `Canada Exports`, {{state}}) %>%
     arrange(desc(Value)) %>%
@@ -453,7 +453,7 @@ rank.bind <- function(data, dataAsCountry, state) {
     filter(Country == paste0(state, "_State")) %>%
     select(Rank) %>%
     pull()
-
+  
   ## for Canada Imports
   CM <- rank.as.country(data, dataAsCountry, cols1 = 17:21, cols2 = 15:18, var = `Canada Imports`, {{state}}) %>%
     arrange(desc(Value)) %>%
@@ -461,13 +461,13 @@ rank.bind <- function(data, dataAsCountry, state) {
     filter(Country == paste0(state, "_State")) %>%
     select(Rank) %>%
     pull()
-
+  
   ## add RanksAsCountry into main tab
   tab %>%
     mutate(RankAsCountry = case_when(Var == "BC Exports" ~ BCX,
                                      Var == "Canada Exports" ~ CX,
                                      Var == "Canada Imports" ~ CM))
-
+  
 }
 
 
@@ -535,11 +535,11 @@ dataCdaX <- make.numeric(data = dataCdaX, colVar = "Commodity")
 dataCdaM <- make.numeric(data = dataCdaM, colVar = "Commodity")
 
 ### * manually make state names match Index$X2
-dataGeneral <- dataGeneral %>%
+dataGeneral <- dataGeneral %>% 
   mutate(X2 = case_when(X2 == "Washington, state" ~ "Washington",
                         TRUE ~ as.character(X2)))
 
-dataHighTech <- dataHighTech %>%
+dataHighTech <- dataHighTech %>% 
   mutate(BC.Trade.in.High.Technology.Goods = case_when(
     BC.Trade.in.High.Technology.Goods == "Washington, state" ~ "Washington",
     TRUE ~ as.character(BC.Trade.in.High.Technology.Goods)))
@@ -559,7 +559,7 @@ dataRankState <- dataRankState %>%
 dataStateX <- dataStateX %>% rename(Washington = `Washington,.state`) %>%
   make.numeric(colVar = "SITC")
 
-dataTime <- dataTime %>%
+dataTime <- dataTime %>% 
   mutate(TIME.SERIES.DATA = case_when(TIME.SERIES.DATA == "Washington, state" ~ "Washington",
                                       TRUE ~ as.character(TIME.SERIES.DATA)))
 
@@ -645,14 +645,14 @@ t15 <- map_df(States, rank.bind, data = dataRankState, dataAsCountry = dataRank)
 
 
 ## 2. merge into mega-data
-nested_data_states <- t01 %>%
+nested_data_states <- t01 %>% 
   ## take t01 and add in t02 through t06 (built with StatesDot)
   left_join(t02, by = "state") %>%
   left_join(t03, by = "state") %>%
   left_join(t04, by = "state") %>%
   ## there is no t05 table like for Countries
   left_join(t06, by = "state") %>%
-  ## replace dots with spaces in state names
+  ## replace dots with spaces in state names 
   mutate(state = str_replace_all(state, pattern = "\"", replacement = ""),
          state = str_replace_all(state, pattern = "[.]", replacement = " "),
          state = str_replace_all(state, pattern = "  ", replacement = ". ")) %>%
@@ -667,5 +667,41 @@ nested_data_states <- t01 %>%
   ## there is no t14 for States (or Countries)
   left_join(t15, by = "state")
 
+
+library(dplyr)
+library(purrr)
+
+# Save as RDS
 saveRDS(nested_data_states, "data/nested_data_states.rds")
+
+# Combine all data frames in the list into one
+flat_states <- bind_rows(nested_data_states, .id = "State")
+
+# Convert any list-columns to character
+flat_states_clean <- flat_states %>%
+  mutate(across(where(is.list), ~ map_chr(., toString)))
+
+# Save as CSV
+write.csv(flat_states_clean, "data/nested_data_states.csv", row.names = FALSE)
+
+# Create the note with today's date
+note <- "Data sourced from Statistics Canada, the United States Census Bureau, the Bureau of Economic Analysis (U.S.), and the International Trade Administration (U.S. Department of Commerce), and is current as of"
+note_date <- format(Sys.Date(), "%B %d, %Y")
+full_note <- paste0(note, " ", note_date, ".")
+
+# Get number of columns in the dataset
+num_cols <- ncol(flat_states_clean)
+
+# Create two blank rows and the note row
+blank_row <- rep("", num_cols)
+note_row <- c(full_note, rep("", num_cols - 1))
+
+# Combine into a data frame
+extra_rows <- rbind(blank_row, blank_row, note_row)
+extra_df <- as.data.frame(extra_rows, stringsAsFactors = FALSE)
+
+# Append to the CSV
+write.table(extra_df, "data/nested_data_states.csv", sep = ",", row.names = FALSE, col.names = FALSE, append = TRUE)
+
+
 
