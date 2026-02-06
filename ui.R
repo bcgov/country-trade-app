@@ -14,31 +14,22 @@
 
 ## Define UI for application
 shinyUI(tagList(tags$head(includeHTML("www/google-analytics.html")),
+                fluidRow( bcsapps::bcsHeaderUI(id = 'header', appname = "Trade Profiles", github = "https://github.com/bcgov/country-trade-app")),
+
                 dashboardPage(title = "Trade Profiles",
                               
                               
                               # dashboard header
                               dashboardHeader(
-                                tags$li(class = "dropdown",
-                                        tags$style(type = 'text/css', '.skin-blue .main-header .navbar{display:none;}')),
-                                
-                                # dashboard title
-                                title = tags$div(class = "banner",
-                                                 a(href = "https://gov.bc.ca",
-                                                   img(src = "img/logo-banner.png",
-                                                       title = "Government of British Columbia",
-                                                       alt = "British Columbia - BC Stats")),
-                                                 h1("Trade Profiles",
-                                                    style = "font-weight:400; color:white; margin: 5px 5px 0 18px;")),
-                                titleWidth = 700),
-                              
+                                disable = TRUE),
+
                               # dashboard sidebar
                               dashboardSidebar(
                                 br(),
                                 width = 310,
                                tags$head(
                                   tags$style(HTML(".sidebar {
-                                        height: 90vh; overflow-y: auto;
+                                        height: 90vh; overflow-y: auto; padding-top: 15px
                                     }"
                                                   ) # close HTML       
                                              )      # close tags$style
@@ -83,7 +74,8 @@ shinyUI(tagList(tags$head(includeHTML("www/google-analytics.html")),
                               dashboardBody(
                                 tags$style(type = "text/css",
                                            ".shiny-output-error {visibility: hidden;}",
-                                           ".shiny-output-error:before {visibility: hidden;}"),
+                                           ".shiny-output-error:before {visibility: hidden;}",
+                                           ".content-wrapper {margin-top:15px;}"),
                                 tags$script(HTML("$('body').addClass('fixed');")),
                                 tags$head(tags$meta(name = "viewport", content = "width=1500")), # mobile friendly version of the app 
                                 tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),

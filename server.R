@@ -12,6 +12,7 @@
 
 ## Define server logic
 shinyServer(function(input, output, session) {
+  bcsapps::bcsHeaderServer(id = 'header', links = TRUE)
 
   ## Adds text to sidebar
   output$last_date <- renderUI({
