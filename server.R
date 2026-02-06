@@ -66,6 +66,9 @@ shinyServer(function(input, output, session) {
 
     content = function(file) {
 
+      ## send download event tracking to google analytics
+      session$sendCustomMessage("trackDownload", list(filename = paste0("Fact", input$Country, ".xlsx")))
+
       ## Set up parameters to pass to Rmd document
       params <- list(Country = input$Country)
 
@@ -81,6 +84,9 @@ shinyServer(function(input, output, session) {
     filename = function() { paste0("Fact", input$state, ".xlsx") },
 
     content = function(file) {
+
+      ## send download event tracking to google analytics
+      session$sendCustomMessage("trackDownload", list(filename = paste0("Fact", input$state, ".xlsx")))
 
       ## Set up parameters to pass to Rmd document
       params <- list(state = input$state)
@@ -98,6 +104,9 @@ shinyServer(function(input, output, session) {
     filename = function() { paste0("Fact", input$Country, ".pdf") },
 
     content = function(file) {
+
+      ## send download event tracking to google analytics
+      session$sendCustomMessage("trackDownload", list(filename = paste0("Fact", input$Country, ".pdf")))
 
       # this appears to do nothing
       # ## trying to get fontspec & setmainfont to work
@@ -126,6 +135,9 @@ shinyServer(function(input, output, session) {
     filename = function() { paste0("Fact", input$state, ".pdf") },
 
     content = function(file) {
+
+      ## send download event tracking to google analytics
+      session$sendCustomMessage("trackDownload", list(filename = paste0("Fact", input$state, ".pdf")))
 
       out = rmarkdown::render("StateFactSheet.Rmd",
                               output_file = file,
