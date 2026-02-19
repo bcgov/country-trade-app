@@ -26,7 +26,7 @@
 ## set value ----
 
 ## set "Last updated" date, for ui.R
-last_update <- "December 16, 2025" ## "February 17, 2021"
+last_update <- "February 18, 2026" ## "February 17, 2021"
 # last_update <- format(Sys.time(), "%B %d %Y")  ## gives Month Date Year (e.g., November 12 2020)
 
 
