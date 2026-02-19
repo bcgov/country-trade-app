@@ -321,7 +321,7 @@ travel.table <- function(data, state) {
   bind_rows(TripsToCda, SpentInCda, TripsToState, SpentInState) %>%
     ## add in state name, re-arrange columns, only include maxYear col of data
     mutate(state = {{state}}) %>%
-    select(state, Var, Stat = maxYear, Rank) %>%
+    select(state, Var, Stat = all_of(maxYear), Rank) %>%
     add_row(state = {{state}}, Var = "Year", Stat = as.numeric(maxYear), Rank = NA)
 
 }
